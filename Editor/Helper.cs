@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
 
 namespace LWGUI
@@ -859,8 +860,6 @@ namespace LWGUI
 				menus.AddSeparator("");
 				foreach (var activePresetData in lwgui.perFrameData.activePresets)
 				{
-					if (activePresetData.property == prop) continue;
-
 					var activePreset = activePresetData.preset;
 					var presetAsset = lwgui.perShaderData.propertyDatas[activePresetData.property.name].propertyPresetAsset;
 					var presetPropDisplayName = lwgui.perShaderData.propertyDatas[activePresetData.property.name].displayName;
@@ -881,5 +880,92 @@ namespace LWGUI
 		}
 		#endregion
 
+		#region Custom
+
+		public class PropertyInfo
+		{
+			public static readonly string Surface = "_Surface";
+			public static readonly string Blend = "_Blend";
+			public static readonly string Cull = "_Cull";
+			public static readonly string AlphaTest = "_AlphaClip";
+			public static readonly string Cutoff = "_Cutoff";
+			public static readonly string ZTest = "_ZTest";
+			public static readonly string ZWrite = "_ZWrite";
+			public static readonly string SrcBlend = "_SrcBlend";
+			public static readonly string DstBlend = "_DstBlend";
+			public static readonly string QueueOffset = "_QueueOffset";
+		}
+
+		public static void SetQueueOffset(UnityEngine.Object[] materials)
+		{
+			foreach (Material m in materials)
+			{
+				var queueOffset = m.GetFloat(PropertyInfo.QueueOffset);
+				m.SetInt(PropertyInfo.QueueOffset, (int)queueOffset);
+				var renderTypeTag = m.GetTag("RenderType", false, "Opaque");
+				switch (renderTypeTag)
+				{
+					case "Opaque":
+						m.renderQueue = (int)queueOffset + 2000;
+						break;
+					case "TransparentCutout":
+						m.renderQueue = (int)queueOffset + 2450;
+						break;
+					case "Transparent":
+						m.renderQueue = (int)queueOffset + 3000;
+						break;
+				}
+			}
+		}
+		
+		public static void SetSurfaceType(UnityEngine.Object[] materials, int surfaceType)
+		{
+			foreach (Material m in materials)
+			{
+				if (surfaceType == 0) // Opaque
+				{
+					m.renderQueue = (int) RenderQueue.Geometry;
+					m.SetOverrideTag("RenderType", "Opaque");
+					m.SetInt(PropertyInfo.SrcBlend, (int) UnityEngine.Rendering.BlendMode.One);
+					m.SetInt(PropertyInfo.DstBlend, (int) UnityEngine.Rendering.BlendMode.Zero);
+					m.SetFloat(PropertyInfo.ZWrite, 1);
+					m.DisableKeyword("_ALPHABLEND_ON");
+					m.DisableKeyword("_ALPHATEST_ON");
+				}
+				else if(surfaceType == 1) // Transparent
+				{
+					m.renderQueue = (int) RenderQueue.Transparent;
+					m.SetOverrideTag("RenderType", "Transparent");
+					m.SetInt(PropertyInfo.SrcBlend, (int) UnityEngine.Rendering.BlendMode.SrcAlpha);
+					m.SetInt(PropertyInfo.DstBlend, (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+					m.SetFloat(PropertyInfo.ZWrite, 0);
+					m.EnableKeyword("_ALPHABLEND_ON");
+					m.DisableKeyword("_ALPHATEST_ON");
+				}
+				else if (surfaceType == 2) // Clip
+				{
+					m.renderQueue = (int) RenderQueue.AlphaTest;
+					m.SetOverrideTag("RenderType", "TransparentCutout");
+					m.SetInt(PropertyInfo.SrcBlend, (int)UnityEngine.Rendering.BlendMode.One);
+					m.SetInt(PropertyInfo.DstBlend, (int)UnityEngine.Rendering.BlendMode.Zero);
+					m.SetFloat(PropertyInfo.ZWrite, 1);
+					m.EnableKeyword("_ALPHATEST_ON");
+					m.DisableKeyword("_ALPHABLEND_ON");
+				}
+
+				if (m.HasProperty(PropertyInfo.QueueOffset))
+				{
+					m.renderQueue += (int)m.GetFloat(PropertyInfo.QueueOffset);
+				}
+				
+				if (m.HasProperty("_DepthPrePass"))
+				{
+					m.SetShaderPassEnabled("SRPDefaultUnlit", m.GetFloat("_DepthPrePass")>0);
+					m.SetShaderPassEnabled("ShadowCaster", m.GetFloat("_CasterShadow")>0);
+				}
+			}
+		}
+
+		#endregion
 	}
 }

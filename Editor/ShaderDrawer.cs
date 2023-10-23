@@ -1329,6 +1329,143 @@ namespace LWGUI
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor) { }
 	}
+	
+	// Custom
+	public class SurfaceDrawer : SubDrawer
+	{
+		private enum SurfaceEnum
+		{
+			Opaque = 0,
+			Transparent = 1,
+			TransparentCutout = 2,
+		}
+
+		private SurfaceEnum surfaceEnum = SurfaceEnum.Opaque;
+		
+		#region
+		
+		public SurfaceDrawer(string group)
+		{
+			this.group = group;
+		}
+
+		#endregion
+
+		protected override bool IsMatchPropType(MaterialProperty property)
+		{
+			return base.IsMatchPropType(property);
+		}
+
+		public static readonly string[] surfaceTypeNames = Enum.GetNames(typeof(SurfaceEnum));
+
+		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
+		{
+			var rect = EditorGUILayout.GetControlRect();
+			
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = false;
+			
+			surfaceEnum = (SurfaceEnum)EditorGUI.EnumPopup(rect, (SurfaceEnum)prop.floatValue);
+			
+			//Helper.PopupShaderProperty(editor, prop, label, surfaceTypeNames);
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+
+				Helper.SetSurfaceType(editor.targets, (int)surfaceEnum);
+				prop.floatValue = (float)surfaceEnum;
+				
+				
+			}
+		}
+	}
+	
+	public class QueueDrawer : SubDrawer
+	{
+		#region
+		
+		public QueueDrawer(string group)
+		{
+			this.group = group;
+		}
+
+		#endregion
+		
+		protected override bool IsMatchPropType(MaterialProperty property)
+		{
+			return base.IsMatchPropType(property);
+		}
+
+		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
+		{
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = false;
+			
+			editor.DefaultShaderProperty(prop, label.text);
+
+			if (EditorGUI.EndChangeCheck())
+			{
+				EditorGUI.showMixedValue = prop.hasMixedValue;
+				Helper.SetQueueOffset(editor.targets);
+			}
+		}
+	}
+	
+	
+	/// <summary>
+	/// Similar to builtin Toggle()
+	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// keyword：keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+	/// Target Property Type: FLoat
+	/// </summary>
+	internal class SubToggleOffDrawer : SubDrawer
+	{
+		private string _keyWord = String.Empty;
+		
+		public SubToggleOffDrawer() { }
+		public SubToggleOffDrawer(string group) : this(group, String.Empty) { }
+
+		public SubToggleOffDrawer(string group, string keyWord)
+		{
+			this.group = group;
+			this._keyWord = keyWord;
+		}
+		
+		protected override bool IsMatchPropType(MaterialProperty property) { return property.type == MaterialProperty.PropType.Float; }
+
+		public override void GetDefaultValueDescription(Shader           inShader,
+			MaterialProperty inProp,
+			PerShaderData    inPerShaderData,
+			PerFrameData     inoutPerFrameData)
+		{
+			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
+				inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue > 0 ? "Off" : "On";
+		}
+
+		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
+		{
+
+			EditorGUI.BeginChangeCheck();
+			EditorGUI.showMixedValue = prop.hasMixedValue;
+			var rect = position;//EditorGUILayout.GetControlRect();
+			var value = EditorGUI.Toggle(rect, label, prop.floatValue > 0.0f);
+			string k = Helper.GetKeyWord(_keyWord, prop.name);
+			if (EditorGUI.EndChangeCheck())
+			{
+				prop.floatValue = value ? 1.0f : 0.0f;
+				Helper.SetShaderKeyWord(editor.targets, k, !value);
+			}
+			EditorGUI.showMixedValue = false;
+		}
+
+		public override void Apply(MaterialProperty prop)
+		{
+			base.Apply(prop);
+			if (!prop.hasMixedValue && IsMatchPropType(prop))
+				Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyWord, prop.name), !(prop.floatValue > 0f));
+		}
+	}
 
 	/// <summary>
 	/// Control the show or hide of a single or a group of properties based on multiple conditions.
