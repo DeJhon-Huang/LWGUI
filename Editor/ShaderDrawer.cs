@@ -782,27 +782,23 @@ namespace LWGUI
 	/// group：father group name, support suffix keyword for conditional display (Default: none)
 	/// Target Property Type: Vector, used to dot() with Texture Sample Value
 	/// </summary>
-	public class ChannelDrawer : SubDrawer
+	public class ChannelDrawer : SubDrawer 
 	{
-		private static GUIContent[] _names = new[] {
-			new GUIContent("R"),
-			new GUIContent("G"),
-			new GUIContent("B"),
-			new GUIContent("A"),
-			new GUIContent("RGB Average"),
-			new GUIContent("RGB Luminance"),
-			new GUIContent("None")
-		};
-		private static int[] _intValues = new int[] { 0, 1, 2, 3, 4, 5, 6 };
+		private static GUIContent[] _names  = new[] { 
+			new GUIContent("PBR: R"), new GUIContent("PBR: G"), new GUIContent("PBR: B"), new GUIContent("PBR: A"),
+			new GUIContent("SM1: R"), new GUIContent("SM1: G"), new GUIContent("SM1: B"), new GUIContent("SM1: A") };
+		
+		private static int[]     _intValues     = new int[] { 0, 1, 2, 3, 4, 5, 6, 7 };
 		private static Vector4[] _vector4Values = new[]
 		{
 			new Vector4(1, 0, 0, 0),
 			new Vector4(0, 1, 0, 0),
 			new Vector4(0, 0, 1, 0),
 			new Vector4(0, 0, 0, 1),
-			new Vector4(1f / 3f, 1f / 3f, 1f / 3f, 0),
-			new Vector4(0.2126f, 0.7152f, 0.0722f, 0),
-			new Vector4(0, 0, 0, 0)
+			new Vector4(2, 0, 0, 0),
+			new Vector4(0, 2, 0, 0),
+			new Vector4(0, 0, 2, 0),
+			new Vector4(0, 0, 0, 2),
 		};
 
 		public ChannelDrawer() { }
