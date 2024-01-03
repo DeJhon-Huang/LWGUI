@@ -2,6 +2,8 @@
 
 [中文](https://github.com/JasonMa0012/LWGUI/blob/dev/README_CN.md) | [English](https://github.com/JasonMa0012/LWGUI)
 
+[![](https://dcbadge.vercel.app/api/server/WwBYGXqPEh)](https://discord.gg/WwBYGXqPEh)
+
 一个轻量, 灵活, 强大的**Unity Shader GUI**系统.
 
 已经过诸多大型商业项目的验证, 使用简洁的Material Property Drawer语法实现功能强大的Shader GUI, 节省大量开发时间, 易于使用和扩展, 有效提升美术人员的使用体验.
@@ -285,7 +287,7 @@ public SubKeywordEnumDrawer(string group, string kw1, string kw2, string kw3, st
 /// group：father group name, support suffix keyword for conditional display (Default: none)
 /// extraPropName: extra property name  (Default: none)
 /// Target Property Type: Texture
-/// Extra Property Type: Any, except Texture
+/// Extra Property Type: Color, Vector
 public TexDrawer() { }
 public TexDrawer(string group) : this(group, String.Empty) { }
 public TexDrawer(string group, string extraPropName)
@@ -309,10 +311,6 @@ Example:
 [Main(Group3, _, on)] _group3 ("Group - Tex and Color Samples", float) = 0
 [Tex(Group3, _color)] _tex_color ("Tex with Color", 2D) = "white" { }
 [HideInInspector] _color (" ", Color) = (1, 0, 0, 1)
-[Tex(Group3, _float4)] _tex_float ("Tex with Float", 2D) = "white" { }
-[HideInInspector] _float4 (" ", float) = 0
-[Tex(Group3, _range)] _tex_range ("Tex with Range", 2D) = "white" { }
-[HideInInspector] _range (" ", Range(0,1)) = 0
 [Tex(Group3, _textureChannelMask1)] _tex_channel ("Tex with Channel", 2D) = "white" { }
 [HideInInspector] _textureChannelMask1(" ", Vector) = (0,0,0,1)
 
@@ -595,7 +593,7 @@ public Hidden()
 /// 可以根据多个条件控制单个或者一组属性的显示 / 隐藏.
 /// logicalOperator: And | Or (Default: And).
 /// propName: Target Property Name used for comparison.
-/// compareFunction: Less | Greater | LEqual | GEqual | Equal | NotEqual.
+/// compareFunction: Less (L) | Equal (E) | LessEqual (LEqual / LE) | Greater (G) | NotEqual (NEqual / NE) | GreaterEqual (GEqual / GE).
 /// value: Target Property Value used for comparison.
 public ShowIfDecorator(string propName, string comparisonMethod, float value) : this("And", propName, comparisonMethod, value) { }
 public ShowIfDecorator(string logicalOperator, string propName, string compareFunction, float value)

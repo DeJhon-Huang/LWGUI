@@ -126,9 +126,9 @@ namespace LWGUI
 			}
 		}
 
-		public static void AdaptiveFieldWidth(GUIStyle style, GUIContent content, float extraWidth = 0)
+		public static void AdaptiveFieldWidth(GUIStyle style, GUIContent content)
 		{
-			var extraTextWidth = Mathf.Max(0, style.CalcSize(content).x + extraWidth - EditorGUIUtility.fieldWidth);
+			var extraTextWidth = Mathf.Max(0, style.CalcSize(content).x - (EditorGUIUtility.fieldWidth - RevertableHelper.revertButtonWidth));
 			EditorGUIUtility.labelWidth -= extraTextWidth;
 			EditorGUIUtility.fieldWidth += extraTextWidth;
 		}
@@ -311,7 +311,7 @@ namespace LWGUI
 
 			// Button
 			{
-				// Right Click to Context Click
+				// Cancel Right Click
 				if (Event.current.type == EventType.MouseDown && Event.current.button == 1 && rect.Contains(Event.current.mousePosition))
 					Event.current.Use();
 
@@ -358,7 +358,10 @@ namespace LWGUI
 			if (!string.IsNullOrEmpty(helpboxStr))
 			{
 				var content = new GUIContent(helpboxStr, _helpboxIcon);
-				var helpboxRect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(true, guiStyle_Helpbox.CalcHeight(content, EditorGUIUtility.currentViewWidth)));
+				var textWidth = EditorGUIUtility.currentViewWidth - ReflectionHelper.EditorGUI_Indent - RevertableHelper.revertButtonWidth
+							  - _helpboxIcon.width - guiStyle_Helpbox.margin.horizontal + 0.5f;
+				var textHeight = guiStyle_Helpbox.CalcHeight(new GUIContent(helpboxStr), textWidth);
+				var helpboxRect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(true, textHeight));
 				helpboxRect.xMax -= RevertableHelper.revertButtonWidth;
 				GUI.Label(helpboxRect, content, guiStyle_Helpbox);
 				// EditorGUI.HelpBox(helpboxRect, helpboxStr, MessageType.Info);

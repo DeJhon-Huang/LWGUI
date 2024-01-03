@@ -13,7 +13,7 @@ namespace LWGUI
 	{
 		void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData);
 
-		void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, PerShaderData inPerShaderData, PerFrameData inoutPerFrameData);
+		void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerFrameData inoutPerFrameData);
 	}
 
 	public interface IBasePresetDrawer
@@ -67,12 +67,12 @@ namespace LWGUI
 		}
 
 		public virtual void GetDefaultValueDescription(Shader           inShader,
-														MaterialProperty inProp,
-														PerShaderData    inPerShaderData,
-														PerFrameData     inoutPerFrameData)
+													   MaterialProperty inProp,
+													   MaterialProperty inDefaultProp,
+													   PerShaderData    inPerShaderData,
+													   PerFrameData     inoutPerFrameData)
 		{
-			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
-				inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue > 0 ? "On" : "Off";
+			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription = inDefaultProp.floatValue > 0 ? "On" : "Off";
 		}
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -148,7 +148,11 @@ namespace LWGUI
 			inoutPropertyStaticData.groupName = group;
 		}
 
-		public virtual void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, PerShaderData inPerShaderData, PerFrameData inoutPerFrameData) { }
+		public virtual void GetDefaultValueDescription(Shader           inShader,
+													   MaterialProperty inProp,
+													   MaterialProperty inDefaultProp,
+													   PerShaderData    inPerShaderData,
+													   PerFrameData     inoutPerFrameData) { }
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
@@ -204,11 +208,11 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
-			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
-				inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue > 0 ? "On" : "Off";
+			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription = inDefaultProp.floatValue > 0 ? "On" : "Off";
 		}
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -334,6 +338,7 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
@@ -348,8 +353,8 @@ namespace LWGUI
 			}
 
 			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
-				inoutPerFrameData.propertyDatas[_minPropName].defualtProperty.floatValue + " - " +
-				inoutPerFrameData.propertyDatas[_maxPropName].defualtProperty.floatValue;
+				inoutPerFrameData.GetDefaultProperty(_minPropName).floatValue + " - " +
+				inoutPerFrameData.GetDefaultProperty(_maxPropName).floatValue;
 		}
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -370,12 +375,13 @@ namespace LWGUI
 			var w = EditorGUIUtility.labelWidth;
 			EditorGUIUtility.labelWidth = 0;
 			Rect inputRect = MaterialEditor.GetRectAfterLabelWidth(controlRect); // this is the remaining rect area after label's area
-			EditorGUIUtility.labelWidth = w;
 
 			// draw label
 			EditorGUI.PrefixLabel(controlRect, label);
 
 			// draw min max slider
+			var indentLevel = EditorGUI.indentLevel;
+			EditorGUI.indentLevel = 0;
 			Rect[] splittedRect = Helper.SplitRect(inputRect, 3);
 
 			EditorGUI.BeginChangeCheck();
@@ -408,6 +414,9 @@ namespace LWGUI
 				minProp.floatValue = Mathf.Clamp(minf, minProp.rangeLimits.x, minProp.rangeLimits.y);
 				maxProp.floatValue = Mathf.Clamp(maxf, maxProp.rangeLimits.x, maxProp.rangeLimits.y);
 			}
+
+			EditorGUI.indentLevel = indentLevel;
+			EditorGUIUtility.labelWidth = w;
 		}
 	}
 
@@ -494,10 +503,11 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
-			var index = Array.IndexOf(_values, (int)inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue);
+			var index = Array.IndexOf(_values, (int)inDefaultProp.floatValue);
 			if (index < _names.Length && index >= 0)
 				inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription = _names[index].text;
 		}
@@ -525,7 +535,7 @@ namespace LWGUI
 				return;
 			}
 
-			Helper.AdaptiveFieldWidth(EditorStyles.popup, _names[index], EditorStyles.popup.lineHeight);
+			Helper.AdaptiveFieldWidth(EditorStyles.popup, _names[index]);
 			int newIndex = EditorGUI.Popup(rect, label, index, _names);
 			EditorGUI.showMixedValue = false;
 			if (Helper.EndChangeCheck(lwgui, prop))
@@ -612,7 +622,7 @@ namespace LWGUI
 	/// group：father group name, support suffix keyword for conditional display (Default: none)
 	/// extraPropName: extra property name (Default: none)
 	/// Target Property Type: Texture
-	/// Extra Property Type: Any, except Texture
+	/// Extra Property Type: Color, Vector
 	/// </summary>
 	public class TexDrawer : SubDrawer
 	{
@@ -641,20 +651,21 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
-			var extraProp = inoutPerFrameData.GetProperty(_extraPropName);
-			if (extraProp != null)
+			var defaultExtraProp = inoutPerFrameData.GetDefaultProperty(_extraPropName);
+			if (defaultExtraProp != null)
 			{
 				var text = string.Empty;
-				if (extraProp.type == MaterialProperty.PropType.Vector)
-					text = ChannelDrawer.GetChannelName(extraProp);
+				if (defaultExtraProp.type == MaterialProperty.PropType.Vector)
+					text = ChannelDrawer.GetChannelName(defaultExtraProp);
 				else
-					text = RevertableHelper.GetPropertyDefaultValueText(extraProp);
+					text = RevertableHelper.GetPropertyDefaultValueText(defaultExtraProp);
 
 				inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
-					RevertableHelper.GetPropertyDefaultValueText(inProp) + ", " + text;
+					RevertableHelper.GetPropertyDefaultValueText(inDefaultProp) + ", " + text;
 			}
 		}
 
@@ -662,25 +673,28 @@ namespace LWGUI
 		{
 			EditorGUI.showMixedValue = prop.hasMixedValue;
 			var rect = position;
-			var texLabel = label.text;
-			label.text = " ";
 
 			MaterialProperty extraProp = lwgui.perFrameData.GetProperty(_extraPropName);
-			if (extraProp != null && extraProp.type != MaterialProperty.PropType.Texture)
+			if (extraProp != null && (
+					extraProp.type == MaterialProperty.PropType.Color
+					|| extraProp.type == MaterialProperty.PropType.Vector
+				))
 			{
-				RevertableHelper.FixGUIWidthMismatch(extraProp.type, editor);
-
 				var i = EditorGUI.indentLevel;
+				EditorGUI.indentLevel = 0;
+
+				var extraRect = MaterialEditor.GetRightAlignedFieldRect(rect);
+				extraRect.height = rect.height;
 
 				if (extraProp.type == MaterialProperty.PropType.Vector)
-					_channelDrawer.OnGUI(rect, extraProp, label, editor);
+					_channelDrawer.OnGUI(extraRect, extraProp, GUIContent.none, editor);
 				else
-					editor.ShaderProperty(rect, extraProp, label);
+					editor.ShaderProperty(extraRect, extraProp, GUIContent.none);
 
 				EditorGUI.indentLevel = i;
 			}
 			
-			editor.TexturePropertyMiniThumbnail(rect, prop, texLabel, label.tooltip);
+			editor.TexturePropertyMiniThumbnail(rect, prop, label.text, label.tooltip);
 
 			EditorGUI.showMixedValue = false;
 		}
@@ -833,11 +847,11 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
-			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
-				GetChannelName(inoutPerFrameData.propertyDatas[inProp.name].defualtProperty);
+			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription = GetChannelName(inDefaultProp);
 		}
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
@@ -925,7 +939,7 @@ namespace LWGUI
 			// per prop variables
 			bool isDirty;
 			// used to read/write Gradient value in code
-			RampHelper.GradientObject gradientObject = ScriptableObject.CreateInstance<RampHelper.GradientObject>();
+			GradientObject gradientObject = ScriptableObject.CreateInstance<GradientObject>();
 			// used to modify Gradient value for users
 			SerializedObject serializedObject = new SerializedObject(gradientObject);
 			SerializedProperty serializedProperty = serializedObject.FindProperty("gradient");
@@ -1049,10 +1063,11 @@ namespace LWGUI
 
 		public override void GetDefaultValueDescription(Shader           inShader,
 														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
 														PerShaderData    inPerShaderData,
 														PerFrameData     inoutPerFrameData)
 		{
-			var index = (int)inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue;
+			var index = (int)inDefaultProp.floatValue;
 			var propertyPreset = inPerShaderData.propertyDatas[inProp.name].propertyPresetAsset;
 
 			if (propertyPreset && index < propertyPreset.presets.Count && index >= 0)
@@ -1090,7 +1105,7 @@ namespace LWGUI
 			}
 			
 			var presetNames = preset.presets.Select(((inPreset) => new GUIContent(inPreset.presetName))).ToArray();
-			Helper.AdaptiveFieldWidth(EditorStyles.popup, presetNames[index], EditorStyles.popup.lineHeight);
+			Helper.AdaptiveFieldWidth(EditorStyles.popup, presetNames[index]);
 			int newIndex = EditorGUI.Popup(rect, label, index, presetNames);
 			if (Helper.EndChangeCheck(lwgui, prop))
 			{
@@ -1467,22 +1482,40 @@ namespace LWGUI
 	/// Control the show or hide of a single or a group of properties based on multiple conditions.
 	/// logicalOperator: And | Or (Default: And).
 	/// propName: Target Property Name used for comparison.
-	/// compareFunction: Less | Greater | LEqual | GEqual | Equal | NotEqual.
+	/// compareFunction: Less (L) | Equal (E) | LessEqual (LEqual / LE) | Greater (G) | NotEqual (NEqual / NE) | GreaterEqual (GEqual / GE).
 	/// value: Target Property Value used for comparison.
 	/// </summary>
 	public class ShowIfDecorator : SubDrawer
 	{
 		private ShowIfData _showIfData = new ShowIfData();
+		private readonly Dictionary<string, string> _compareFunctionLUT = new Dictionary<string, string>()
+		{
+			{ "Less",			"Less" },
+			{ "L",				"Less" },
+			{ "Equal",			"Equal" },
+			{ "E",				"Equal" },
+			{ "LessEqual",		"LessEqual" },
+			{ "LEqual",			"LessEqual" },
+			{ "LE",				"LessEqual" },
+			{ "Greater",		"Greater" },
+			{ "G",				"Greater" },
+			{ "NotEqual",		"NotEqual" },
+			{ "NEqual",			"NotEqual" },
+			{ "NE",				"NotEqual" },
+			{ "GreaterEqual",	"GreaterEqual" },
+			{ "GEqual",			"GreaterEqual" },
+			{ "GE",				"GreaterEqual" },
+		};
 
 		public ShowIfDecorator(string propName, string comparisonMethod, float value) : this("And", propName, comparisonMethod, value) { }
 		public ShowIfDecorator(string logicalOperator, string propName, string compareFunction, float value)
 		{
 			_showIfData.logicalOperator = logicalOperator.ToLower() == "or" ? LogicalOperator.Or : LogicalOperator.And;
 			_showIfData.targetPropertyName = propName;
-			if (!Enum.IsDefined(typeof(CompareFunction), compareFunction))
-				Debug.LogError("Invalid compareFunction: '" + compareFunction + "', Must be one of the following: Less | Greater | LEqual | GEqual | Equal | NotEqual | Always.");
+			if (!_compareFunctionLUT.ContainsKey(compareFunction) || !Enum.IsDefined(typeof(CompareFunction), _compareFunctionLUT[compareFunction]))
+				Debug.LogError("Invalid compareFunction: '" + compareFunction + "', Must be one of the following: Less (L) | Equal (E) | LessEqual (LEqual / LE) | Greater (G) | NotEqual (NEqual / NE) | GreaterEqual (GEqual / GE).");
 			else
-				_showIfData.compareFunction = (CompareFunction)Enum.Parse(typeof(CompareFunction), compareFunction);
+				_showIfData.compareFunction = (CompareFunction)Enum.Parse(typeof(CompareFunction), _compareFunctionLUT[compareFunction]);
 			_showIfData.value = value;
 		}
 
