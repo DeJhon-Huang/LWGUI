@@ -1446,10 +1446,12 @@ namespace LWGUI
 		protected override bool IsMatchPropType(MaterialProperty property) { return property.type == MaterialProperty.PropType.Float; }
 
 		public override void GetDefaultValueDescription(Shader           inShader,
-			MaterialProperty inProp,
-			PerShaderData    inPerShaderData,
-			PerFrameData     inoutPerFrameData)
+														MaterialProperty inProp,
+														MaterialProperty inDefaultProp,
+														PerShaderData    inPerShaderData,
+														PerFrameData     inoutPerFrameData)
 		{
+			
 			inoutPerFrameData.propertyDatas[inProp.name].defaultValueDescription =
 				inoutPerFrameData.propertyDatas[inProp.name].defualtProperty.floatValue > 0 ? "Off" : "On";
 		}
