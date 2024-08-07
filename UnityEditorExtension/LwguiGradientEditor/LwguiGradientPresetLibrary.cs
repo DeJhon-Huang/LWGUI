@@ -72,7 +72,7 @@ namespace LWGUI.LwguiGradientEditor
         {
             if (gradient == null)
                 return;
-            LwguiGradientEditorHelper.DrawGradientWithBackground(rect, gradient, colorSpace, viewChannelMask);
+            LwguiGradientEditorHelper.DrawGradientWithSeparateAlphaChannel(rect, gradient, colorSpace, viewChannelMask);
         }
 
         public override string GetName(int index)

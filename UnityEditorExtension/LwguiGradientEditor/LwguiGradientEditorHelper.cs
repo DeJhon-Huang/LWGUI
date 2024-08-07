@@ -42,6 +42,29 @@ namespace LWGUI.LwguiGradientEditor
             // }
         }
 
+        public static void DrawGradientWithSeparateAlphaChannel(Rect position, LwguiGradient gradient, ColorSpace colorSpace, LwguiGradient.ChannelMask viewChannelMask)
+        {
+            if (!LwguiGradient.HasChannelMask(viewChannelMask, LwguiGradient.ChannelMask.Alpha) || viewChannelMask == LwguiGradient.ChannelMask.Alpha)
+            {
+                DrawGradientWithBackground(position, gradient, colorSpace, viewChannelMask);
+            }
+            else
+            {
+                var r2 = new Rect(position.x + 1, position.y + 1, position.width - 2, position.height - 2);
+                var rgbRect = new Rect(r2.x, r2.y, r2.width, r2.height * 0.8f);
+                var alphaRect = new Rect(rgbRect.x, rgbRect.yMax, r2.width, r2.height * 0.2f);
+                
+                var rgbTexture = gradient.GetPreviewRampTexture(256, 1, colorSpace, viewChannelMask ^ LwguiGradient.ChannelMask.Alpha);
+                var alphaTexture = gradient.GetPreviewRampTexture(256, 1, colorSpace, LwguiGradient.ChannelMask.Alpha);
+                
+                Color oldColor = GUI.color;
+                GUI.color = Color.white;            //Dont want the Playmode tint to be applied to gradient textures.
+                GUI.DrawTexture(rgbRect, rgbTexture, ScaleMode.StretchToFill, false);
+                GUI.DrawTexture(alphaRect, alphaTexture, ScaleMode.StretchToFill, false);
+                GUI.color = oldColor;
+            }
+        }
+
         public static void GradientField(Rect position, GUIContent label, LwguiGradient gradient, 
             ColorSpace colorSpace = ColorSpace.Gamma, 
             LwguiGradient.ChannelMask viewChannelMask = LwguiGradient.ChannelMask.All, 
@@ -85,7 +108,7 @@ namespace LWGUI.LwguiGradientEditor
 
                     break;
                 case EventType.Repaint:
-                    DrawGradientWithBackground(rect, gradient, colorSpace, viewChannelMask);
+                    DrawGradientWithSeparateAlphaChannel(rect, gradient, colorSpace, viewChannelMask);
                     break;
                 case EventType.ExecuteCommand:
                     // When drawing the modifying Gradient Field and it has changed

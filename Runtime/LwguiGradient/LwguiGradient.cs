@@ -39,6 +39,8 @@ namespace LWGUI.Runtime.LwguiGradient
             TwentyFour          = 24,
             TwentyFourHundred   = 2400
         }
+
+        public static bool HasChannelMask(ChannelMask channelMaskA, ChannelMask channelMaskB) => ((uint)channelMaskA & (uint)channelMaskB) > 0;
         
         public static bool IsChannelIndexInMask(int channelIndex, ChannelMask channelMask) => ((uint)channelMask & (uint)(1 << channelIndex)) > 0;
         
