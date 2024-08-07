@@ -90,6 +90,25 @@ namespace LWGUI.Runtime.LwguiGradient
             }
         }
 
+        public LwguiGradient(Color[] colors, float[] times)
+        {
+            _curves = new List<AnimationCurve>();
+            for (int c = 0; c < (int)Channel.Num; c++)
+                _curves.Add(new AnimationCurve());
+            
+            if (colors == null || times == null)
+                return;
+
+            for (int i = 0; i < Mathf.Min(colors.Length, times.Length); i++)
+            {
+                for (int c = 0; c < (int)Channel.Num; c++)
+                {
+                    _curves[c].AddKey(new Keyframe(times[i], colors[i][c]).SetLinearTangentMode());
+                }
+            }
+            SetLinearTangentMode();
+        }
+
         public LwguiGradient(List<AnimationCurve> inRgbaCurves) => SetRgbaCurves(inRgbaCurves);
 
         #endregion
@@ -215,6 +234,14 @@ namespace LWGUI.Runtime.LwguiGradient
                  IsChannelIndexInMask((int)Channel.Green, channelMask)   ? _curves[(int)Channel.Green].Evaluate(time)   : 0,
                  IsChannelIndexInMask((int)Channel.Blue, channelMask)    ? _curves[(int)Channel.Blue].Evaluate(time)    : 0,
                  IsChannelIndexInMask((int)Channel.Alpha, channelMask)   ? _curves[(int)Channel.Alpha].Evaluate(time)   : 1);
+        }
+
+        public void SetLinearTangentMode()
+        {
+            for (int c = 0; c < (int)Channel.Num; c++)
+            {
+                _curves[c].SetLinearTangents();
+            }
         }
 
         #region LwguiGradient <=> Ramp Texture
