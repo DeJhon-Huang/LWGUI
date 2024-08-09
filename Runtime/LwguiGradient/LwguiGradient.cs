@@ -115,6 +115,7 @@ namespace LWGUI.Runtime.LwguiGradient
 
         public void Clear(ChannelMask channelMask = ChannelMask.All)
         {
+            _curves ??= new List<AnimationCurve>();
             for (int c = 0; c < (int)Channel.Num; c++)
             {
                 if (!IsChannelIndexInMask(c, channelMask)) continue;
@@ -126,6 +127,7 @@ namespace LWGUI.Runtime.LwguiGradient
         
         public void DeepCopyFrom(LwguiGradient src)
         {
+            _curves ??= new List<AnimationCurve>();
             for (int c = 0; c < (int)Channel.Num; c++)
             {
                 if (_curves.Count == c)
