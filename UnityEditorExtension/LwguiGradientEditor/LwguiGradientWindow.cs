@@ -135,6 +135,7 @@ namespace LWGUI.LwguiGradientEditor
             // Debug.Log("Update");
             _lwguiGradientWindow.Init();
             _lwguiGradientWindow.Repaint();
+            GUI.changed = true;
         }
         
         private static LwguiGradientWindow GetWindow(bool focus = true) => (LwguiGradientWindow)GetWindow(typeof(LwguiGradientWindow), true, "LWGUI Gradient Editor", focus);
@@ -259,6 +260,7 @@ namespace LWGUI.LwguiGradientEditor
         {
             _lwguiGradientEditor = null;
             _lwguiGradientWindow = null;
+            _lwguiGradientLibraryEditor = null;
         }
 
         private void RegisterEvents()

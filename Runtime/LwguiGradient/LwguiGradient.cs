@@ -126,9 +126,13 @@ namespace LWGUI.Runtime.LwguiGradient
         
         public void DeepCopyFrom(LwguiGradient src)
         {
-            _curves = new List<AnimationCurve>();
             for (int c = 0; c < (int)Channel.Num; c++)
-                _curves.Add(new AnimationCurve());
+            {
+                if (_curves.Count == c)
+                    _curves.Add(new AnimationCurve());
+
+                _curves[c].keys = new Keyframe[0];
+            }
 
             for (int c = 0; c < src._curves.Count; c++)
             {
