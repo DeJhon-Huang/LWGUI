@@ -160,7 +160,8 @@ namespace LWGUI
 			}
 		}
 
-		private static readonly Texture _icon = AssetDatabase.LoadAssetAtPath<Texture>(AssetDatabase.GUIDToAssetPath("e7bc1130858d984488bca32b8512ca96"));
+		private static Texture _iconCache;
+		private static Texture _icon => _iconCache = _iconCache ?? AssetDatabase.LoadAssetAtPath<Texture>(AssetDatabase.GUIDToAssetPath("e7bc1130858d984488bca32b8512ca96"));
 
 		public static bool DrawRevertButton(Rect rect)
 		{
