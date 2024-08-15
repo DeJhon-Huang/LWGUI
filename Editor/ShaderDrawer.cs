@@ -768,7 +768,7 @@ namespace LWGUI
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
-			Stack<MaterialProperty> cProps = new Stack<MaterialProperty>();
+			var cProps = new Stack<MaterialProperty>();
 			for (int i = 0; i < 4; i++)
 			{
 				if (i == 0)
@@ -782,27 +782,25 @@ namespace LWGUI
 					cProps.Push(p);
 			}
 
-			int count = cProps.Count;
+			var count = cProps.Count;
 			var colorArray = cProps.ToArray();
-			var rect = position; //EditorGUILayout.GetControlRect();
 
-			EditorGUI.PrefixLabel(rect, label);
+			EditorGUI.PrefixLabel(position, label);
 
 			for (int i = 0; i < count; i++)
 			{
 				EditorGUI.BeginChangeCheck();
 				var cProp = colorArray[i];
 				EditorGUI.showMixedValue = cProp.hasMixedValue;
-				Rect r = new Rect(rect);
+				var r = new Rect(position);
 				var interval = 13 * i * (-0.25f + EditorGUI.indentLevel * 1.25f);
-				float w = EditorGUIUtility.fieldWidth * (0.8f + EditorGUI.indentLevel * 0.2f);
+				var w = EditorGUIUtility.fieldWidth * (0.8f + EditorGUI.indentLevel * 0.2f);
 				r.xMin += r.width - w * (i + 1) + interval;
 				r.xMax -= w * i - interval;
 
-				Color src, dst;
-				src = cProp.colorValue;
+				var src = cProp.colorValue;
 				var isHdr = (colorArray[i].flags & MaterialProperty.PropFlags.HDR) != MaterialProperty.PropFlags.None;
-				dst = EditorGUI.ColorField(r, GUIContent.none, src, true, true, isHdr);
+				var dst = EditorGUI.ColorField(r, GUIContent.none, src, true, true, isHdr);
 				if (Helper.EndChangeCheck(metaDatas, cProp))
 				{
 					cProp.colorValue = dst;
