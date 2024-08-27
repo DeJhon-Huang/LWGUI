@@ -8,7 +8,7 @@ using UnityEngine;
 namespace LWGUI.Runtime.LwguiGradient
 {
     [Serializable]
-    public class LwguiGradient
+    public class LwguiGradient : IDisposable
     {
         #region Channel Enum
         
@@ -113,6 +113,29 @@ namespace LWGUI.Runtime.LwguiGradient
 
         #endregion
 
+        public int GetValueBasedHashCode()
+        {
+            var hash = 17;
+
+            if (_curves != null)
+            {
+                foreach (var curve in _curves)
+                {
+                    if (curve != null)
+                    {
+                        hash = hash * 23 + curve.GetHashCode();
+                    }
+                }
+            }
+
+            return hash;
+        }
+        
+        public void Dispose()
+        {
+            _curves?.Clear();
+        }
+        
         public void Clear(ChannelMask channelMask = ChannelMask.All)
         {
             _curves ??= new List<AnimationCurve>();
@@ -133,7 +156,7 @@ namespace LWGUI.Runtime.LwguiGradient
                 if (_curves.Count == c)
                     _curves.Add(new AnimationCurve());
 
-                _curves[c].keys = new Keyframe[0];
+                _curves[c].keys = Array.Empty<Keyframe>();
             }
 
             for (int c = 0; c < src._curves.Count; c++)
@@ -270,12 +293,18 @@ namespace LWGUI.Runtime.LwguiGradient
 
         public Texture2D GetPreviewRampTexture(int width = 256, int height = 1, ColorSpace colorSpace = ColorSpace.Gamma, ChannelMask channelMask = ChannelMask.All)
         {
-            var ramp   = new Texture2D(width, height, TextureFormat.RGBA32, false, colorSpace == ColorSpace.Linear);
+            if (LwguiGradientHelper.TryGetRampPreview(this, width, height, colorSpace, channelMask, out var cachedPreview)) 
+                return cachedPreview;
+            
+            var rampPreview   = new Texture2D(width, height, TextureFormat.RGBA32, false, colorSpace == ColorSpace.Linear);
             var pixels = GetPixels(width, height, channelMask);
-            ramp.SetPixels(pixels);
-            ramp.wrapMode = TextureWrapMode.Clamp;
-            ramp.Apply();
-            return ramp;
+            rampPreview.SetPixels(pixels);
+            rampPreview.wrapMode = TextureWrapMode.Clamp;
+            rampPreview.name = "LWGUI Gradient Preview";
+            rampPreview.Apply();
+            
+            LwguiGradientHelper.SetRampPreview(this, width, height, colorSpace, channelMask, rampPreview);
+            return rampPreview;
         }
 
         #endregion
@@ -296,7 +325,7 @@ namespace LWGUI.Runtime.LwguiGradient
             }
         }
 
-        public class LwguiMergedColorCurves
+        public class LwguiMergedColorCurves : IDisposable
         {
             public List<List<LwguiKeyframe>> curves = new ();
 
@@ -403,7 +432,12 @@ namespace LWGUI.Runtime.LwguiGradient
             public LwguiGradient ToLwguiGradient()
             {
                 return new LwguiGradient(ToAnimationCurves());
-            }        
+            }
+
+            public void Dispose()
+            {
+                curves?.Clear();
+            }
         }
 
         public static LwguiGradient FromGradient(Gradient gradient)

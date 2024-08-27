@@ -925,7 +925,10 @@ namespace LWGUI
 
 		private static readonly GUIContent _iconMixImage = EditorGUIUtility.IconContent("darkviewbackground");
 
-		protected override float GetVisibleHeight(MaterialProperty prop) { return EditorGUIUtility.singleLineHeight * 2f; }
+		private static readonly float _rampPreviewHeight = EditorGUIUtility.singleLineHeight;
+		private static readonly float _rampButtonsHeight = EditorGUIUtility.singleLineHeight;
+		
+		protected override float GetVisibleHeight(MaterialProperty prop) { return _rampPreviewHeight + _rampButtonsHeight; }
 
 		public RampDrawer() : this(String.Empty) { }
 
@@ -994,7 +997,7 @@ namespace LWGUI
 			// Draw Label
 			var labelRect = new Rect(position); //EditorGUILayout.GetControlRect();
 			{
-				labelRect.yMax -= position.height * 0.5f;
+				labelRect.height = _rampPreviewHeight;
 				EditorGUI.PrefixLabel(labelRect, label);
 			}
 
@@ -1003,7 +1006,7 @@ namespace LWGUI
 			{
 				EditorGUIUtility.labelWidth = 0;
 				EditorGUI.indentLevel = 0;
-				buttonRect.yMin += position.height * 0.5f;
+				buttonRect.yMin = buttonRect.yMax - _rampPreviewHeight;
 				buttonRect = MaterialEditor.GetRectAfterLabelWidth(buttonRect);
 				if (buttonRect.width < 50f) return;
 			}
@@ -1043,7 +1046,7 @@ namespace LWGUI
 
 			// Texture object field, handle switch texture event
 			var rampFieldRect = MaterialEditor.GetRectAfterLabelWidth(labelRect);
-			var previewRect = new Rect(rampFieldRect.x + 1, rampFieldRect.y + 1, rampFieldRect.width - 19, rampFieldRect.height - 2);
+			var previewRect = new Rect(rampFieldRect.x + 0.5f, rampFieldRect.y + 0.5f, rampFieldRect.width - 18, rampFieldRect.height - 0.5f);
 			{
 				var selectButtonRect = new Rect(previewRect.xMax, rampFieldRect.y, rampFieldRect.width - previewRect.width, rampFieldRect.height);
 				RampHelper.RampSelector(selectButtonRect, _rootPath, OnSwitchRampMapEvent);
@@ -1068,7 +1071,7 @@ namespace LWGUI
 					GUI.Label(new Rect(previewRect.x + previewRect.width * 0.5f - 10, previewRect.y, previewRect.width * 0.5f, previewRect.height), "―");
 				}
 				else if (prop.textureValue != null)
-					EditorGUI.DrawPreviewTexture(previewRect, prop.textureValue);
+					LwguiGradientEditorHelper.DrawGradientWithSeparateAlphaChannel(previewRect, gradient, _colorSpace, _viewChannelMask);
 			}
 
 			EditorGUIUtility.labelWidth = labelWidth;
