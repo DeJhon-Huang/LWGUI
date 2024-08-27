@@ -74,6 +74,7 @@ namespace LWGUI.LwguiGradientEditor
             int id = GUIUtility.GetControlID(s_LwguiGradientHash, FocusType.Keyboard, position);
             var rect = EditorGUI.PrefixLabel(position, id, label);
             var evt = Event.current;
+            
 
             // internal static Gradient DoGradientField(Rect position, int id, Gradient value, SerializedProperty property, bool hdr, ColorSpace space)
             switch (evt.GetTypeForControl(id))
@@ -113,9 +114,10 @@ namespace LWGUI.LwguiGradientEditor
                 case EventType.ExecuteCommand:
                     // When drawing the modifying Gradient Field and it has changed
                     if ((GUIUtility.keyboardControl == id || s_LwguiGradientID == id)
-                        && evt.commandName == LwguiGradientWindow.LwguiGradientChangedCommand)
+                        && (evt.commandName is LwguiGradientWindow.LwguiGradientChangedCommand))
                     {
                         GUI.changed = true;
+                        LwguiGradientHelper.ClearRampPreviewCaches();
                         HandleUtility.Repaint();
                     }
                     break;

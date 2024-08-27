@@ -136,6 +136,7 @@ namespace LWGUI.LwguiGradientEditor
             _lwguiGradientWindow.Init();
             _lwguiGradientWindow.Repaint();
             GUI.changed = true;
+            LwguiGradientHelper.ClearRampPreviewCaches();
         }
         
         private static LwguiGradientWindow GetWindow(bool focus = true) => (LwguiGradientWindow)GetWindow(typeof(LwguiGradientWindow), true, "LWGUI Gradient Editor", focus);
@@ -163,6 +164,8 @@ namespace LWGUI.LwguiGradientEditor
             _lwguiGradientWindow.Init();
             _lwguiGradientWindow.Show();
             // window.ShowAuxWindow();
+
+            LwguiGradientHelper.ClearRampPreviewCaches();
         }
 
         public static void CloseWindow()
@@ -209,6 +212,7 @@ namespace LWGUI.LwguiGradientEditor
             _lwguiGradientLibraryEditor.OnGUI(_presetLibraryRect, lwguiGradient);
             if (EditorGUI.EndChangeCheck())
             {
+                LwguiGradientHelper.ClearRampPreviewCaches();
                 UpdatePresetLibraryViewSettings();
                 SendEvent(true);
             }
@@ -303,6 +307,7 @@ namespace LWGUI.LwguiGradientEditor
 
             UpdateCurrentGradient(gradient, true);
             // UnityEditorInternal.GradientPreviewCache.ClearCache();
+            // LwguiGradientHelper.ClearRampPreviewCaches();
         }
 
         #endregion

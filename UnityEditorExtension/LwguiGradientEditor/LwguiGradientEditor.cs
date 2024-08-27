@@ -245,7 +245,7 @@ namespace LWGUI.LwguiGradientEditor
                     ApplyGradientChangesToCurve();
                 }
 
-                SyncSelectionFromGradientToCurve();
+                SyncSelectionFromGradientToCurveWithoutChanges();
             }
         }
 
@@ -503,20 +503,23 @@ namespace LWGUI.LwguiGradientEditor
                 foreach (var curveSelection in _selectedCurves.Where(selection => LwguiGradient.IsChannelIndexInMask(selection.curveID, viewChannelMask)))
                 {
                     var cw = _curveEditor.animationCurves[curveSelection.curveID];
-                    var key = cw.curve.keys[curveSelection.key];
+                    var selectedKey = cw.curve.keys[curveSelection.key];
                     if (rgbKeyCountEqual && alphaKeyCountEqual)
-                    {   
+                    {
+                        var newKey = selectedKey;
+                        
                         // Change a key time
                         if (_selectedGradientKey.m_Time != _lastSelectedGradientKey.m_Time)
                         {
-                            key.time = _selectedGradientKey.m_Time;
+                            newKey.time = _selectedGradientKey.m_Time;
                         }
                         // Change a key value
                         else if (_selectedGradientKey.m_Value != _lastSelectedGradientKey.m_Value)
                         {
-                            key.value = _selectedGradientKey.m_IsAlpha ? _selectedGradientKey.m_Value.r : _selectedGradientKey.m_Value[curveSelection.curveID];
+                            newKey.value = _selectedGradientKey.m_IsAlpha ? _selectedGradientKey.m_Value.r : _selectedGradientKey.m_Value[curveSelection.curveID];
                         }
-                        curveSelection.key = cw.MoveKey(curveSelection.key, ref key);
+                        newKey = CheckNewKeyTime(cw, newKey, selectedKey.time);
+                        curveSelection.key = cw.MoveKey(curveSelection.key, ref newKey);
                     }
                     else
                     {
@@ -525,7 +528,7 @@ namespace LWGUI.LwguiGradientEditor
                         {
                             _deletedGradientKey = new GradientEditor.Swatch(_selectedGradientKey.m_Time, _selectedGradientKey.m_Value, _selectedGradientKey.m_IsAlpha);
                             _deletedCurveKeys ??= new List<Keyframe>(new Keyframe[(int)LwguiGradient.Channel.Num]);
-                            _deletedCurveKeys[curveSelection.curveID] = key;
+                            _deletedCurveKeys[curveSelection.curveID] = selectedKey;
                         }
                         
                         // Del a key
@@ -559,16 +562,18 @@ namespace LWGUI.LwguiGradientEditor
                             && _selectedGradientKey?.m_Value == _deletedGradientKey?.m_Value 
                             && _selectedGradientKey?.m_IsAlpha == _deletedGradientKey?.m_IsAlpha)
                         {
-                            var key = _deletedCurveKeys[c];
-                            key.time = _selectedGradientKey.m_Time;
-                            curveSelections.Add(new CurveSelection(c, cw.AddKey(key), CurveSelection.SelectionType.Key));
+                            var deletedKey = _deletedCurveKeys[c];
+                            var newKey = deletedKey;
+                            newKey.time = _selectedGradientKey.m_Time;
+                            newKey = CheckNewKeyTime(cw, newKey, deletedKey.time);
+                            var addedKeyIndex = cw.AddKey(newKey);
+                            curveSelections.Add(new CurveSelection(c, addedKeyIndex, CurveSelection.SelectionType.Key));
                         }
                         // Add a new key
                         else
                         {
                             var curveSelection = _curveEditor.AddKeyAtTime(cw, _selectedGradientKey.m_Time);
                             curveSelections.Add(curveSelection);
-                            // _curveMenuManager.SetBothLinear(new List<KeyIdentifier>(){ new KeyIdentifier(_curveEditor.animationCurves[curveSelection.curveID].curve, curveSelection.curveID, curveSelection.key) });
                         }
                         
                         cw.selected = CurveWrapper.SelectionMode.Selected;
@@ -585,6 +590,22 @@ namespace LWGUI.LwguiGradientEditor
             
             _curveEditor.InvalidateSelectionBounds();
             InitCurveEditor(true);
+
+            // Cannot overlap with the Time of an existing Key when adding or moving Keys
+            Keyframe CheckNewKeyTime(CurveWrapper cw, Keyframe newKey, float oldKeyTime = 0)
+            {
+                try
+                {
+                    var sameTimeKey = cw.curve.keys.First(keyframe => keyframe.time == newKey.time);
+                    if (newKey.time > oldKeyTime)
+                        newKey.time += 0.00001f;
+                    else
+                        newKey.time -= 0.00001f;
+                }
+                catch (InvalidOperationException ex) { }
+
+                return newKey;
+            }
         }
 
         private void PrepareSyncSelectionFromGradientToCurve()
@@ -594,7 +615,7 @@ namespace LWGUI.LwguiGradientEditor
             _lastGradientAlphaSwatchesCount = _gradientAlphaSwatches.Count;
         }
 
-        private void SyncSelectionFromGradientToCurve()
+        private void SyncSelectionFromGradientToCurveWithoutChanges()
         {
             // Only detect when switching selected Key without modifying it
             if (!_gradientEditorRect.Contains(Event.current.mousePosition) 
@@ -606,7 +627,7 @@ namespace LWGUI.LwguiGradientEditor
             
             if (_selectedGradientKey == null)
             {
-                _selectedCurves = null;
+                _curveEditor.SelectNone();
                 return;
             }
             
@@ -626,7 +647,7 @@ namespace LWGUI.LwguiGradientEditor
             }
             
             // Get curve key index
-            _selectedCurves.Clear();
+            _curveEditor.SelectNone();
             var lwguiMergedCurves = new LwguiGradient.LwguiMergedColorCurves(lwguiGradient.rawCurves);
             for (int c = 0; c < (int)LwguiGradient.Channel.Num; c++)
             {
@@ -678,7 +699,7 @@ namespace LWGUI.LwguiGradientEditor
             if (firstOpenWindow)
             {
                 _curveEditor.Frame(new Bounds(new Vector2(0.5f, 0.5f), Vector2.one), true, true);
-                _selectedCurves = null;
+                _curveEditor.SelectNone();
             }
         }
 
