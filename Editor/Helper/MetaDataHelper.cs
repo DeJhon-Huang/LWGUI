@@ -52,7 +52,7 @@ namespace LWGUI
 
 		public void OnValidate()
 		{
-			MaterialEditor.ApplyMaterialPropertyDrawers(GetMaterialEditor()?.targets);
+			UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(GetMaterialEditor()?.targets);
 			MetaDataHelper.ForceUpdateMaterialsMetadataCache(GetMaterialEditor()?.targets);
 		}
 	}

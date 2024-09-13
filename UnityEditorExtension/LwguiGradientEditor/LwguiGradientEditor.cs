@@ -602,7 +602,7 @@ namespace LWGUI.LwguiGradientEditor
                     else
                         newKey.time -= 0.00001f;
                 }
-                catch (InvalidOperationException ex) { }
+                catch (InvalidOperationException) { }
 
                 return newKey;
             }

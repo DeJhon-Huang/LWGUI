@@ -75,7 +75,7 @@ namespace LWGUI
 							break;
 					}
 
-					MaterialEditor.ApplyMaterialPropertyDrawers(material);
+					UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(material);
 				}
 				// is Property Primary Material
 				else if (perMaterialData != null)
