@@ -60,11 +60,10 @@ namespace LWGUI
 		// For Developers: Call this after a material has modified in code
 		public static void ApplyPresetsInMaterial(Material material)
 		{
-			var props = MaterialEditor.GetMaterialProperties(new[] { material });
+			var props = MaterialEditor.GetMaterialProperties(new UnityEngine.Object[] { material });
 			foreach (var prop in props)
 			{
-				List<MaterialPropertyDrawer> decoratorDrawers;
-				var drawer = ReflectionHelper.GetPropertyDrawer(material.shader, prop, out decoratorDrawers);
+				var drawer = ReflectionHelper.GetPropertyDrawer(material.shader, prop, out _);
 
 				// Apply active preset
 				if (drawer != null && drawer is IBasePresetDrawer)
@@ -73,9 +72,8 @@ namespace LWGUI
 					if (activePreset != null)
 						activePreset.ApplyToDefaultMaterial(material);
 				}
-
 			}
-			MaterialEditor.ApplyMaterialPropertyDrawers(material);
+			UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(material);
 		}
 	}
 }
