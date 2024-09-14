@@ -157,7 +157,6 @@ namespace LWGUI.LwguiGradientEditor
         private int _lastGradientAlphaSwatchesCount;
         
         private float _lastEditingTime = float.NegativeInfinity;
-        private bool _lastIsEditingText;
         
         private static bool _isAddGradientKeyFailure;
 
@@ -351,7 +350,7 @@ namespace LWGUI.LwguiGradientEditor
                     if (_lastEditingTime != selectionInfo.selectedTime
                         && _lastEditingTime != float.NegativeInfinity
                         // End editing text
-                        && (!EditorGUI.IsEditingTextField() && _lastIsEditingText 
+                        && (EditorGUI.IsEditingTextField() && Event.current.keyCode == KeyCode.Return 
                             // Mouse drag
                             || !EditorGUI.IsEditingTextField() && hasChange))
                     {
@@ -360,8 +359,6 @@ namespace LWGUI.LwguiGradientEditor
                         InitGradientEditor(true);
                         SyncSelectionFromCurveToGradient(true);
                     }
-
-                    _lastIsEditingText = EditorGUI.IsEditingTextField();
                 }
                 
                 // Vector Value
@@ -827,7 +824,6 @@ namespace LWGUI.LwguiGradientEditor
             _curveEditor?.OnDisable();
             _curveEditor = null;
             _lastChanged = false;
-            _lastIsEditingText = false;
             _lastEditingTime = float.NegativeInfinity;
         }
 
