@@ -350,7 +350,7 @@ namespace LWGUI.LwguiGradientEditor
                     if (_lastEditingTime != selectionInfo.selectedTime
                         && _lastEditingTime != float.NegativeInfinity
                         // End editing text
-                        && (EditorGUI.IsEditingTextField() && Event.current.keyCode == KeyCode.Return 
+                        && (EditorGUI.IsEditingTextField() && Event.current.keyCode is KeyCode.Return or KeyCode.KeypadEnter
                             // Mouse drag
                             || !EditorGUI.IsEditingTextField() && hasChange))
                     {
