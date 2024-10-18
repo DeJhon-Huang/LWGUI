@@ -134,6 +134,7 @@ namespace LWGUI.LwguiGradientEditor
         private GradientEditor _gradientEditor;
         private CurveEditor _curveEditor;
         private bool _viewSettingschanged;
+        private bool _curveEditorContextMenuChanged;
         private bool _changed;
         private bool _lastChanged;
 
@@ -689,7 +690,7 @@ namespace LWGUI.LwguiGradientEditor
             }
 
             _curveEditor.animationCurves = cws;
-            _curveEditor.curvesUpdated   = null;
+            _curveEditor.curvesUpdated = () => _curveEditorContextMenuChanged = true;
             
             SyncCurveEditorRect();
 
@@ -708,10 +709,11 @@ namespace LWGUI.LwguiGradientEditor
             PrepareSyncSelectionFromCurveToGradient();
             EditorGUI.BeginChangeCheck();
             _curveEditor.OnGUI();
-            if (EditorGUI.EndChangeCheck())
+            _changed |= EditorGUI.EndChangeCheck() || _curveEditorContextMenuChanged;
+            if (_changed)
             {
-                _changed = true;
-                InitGradientEditor(true);
+				InitGradientEditor(true);
+				_curveEditorContextMenuChanged = false;
             }
             SyncSelectionFromCurveToGradient();
         }

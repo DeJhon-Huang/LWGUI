@@ -1329,7 +1329,7 @@ namespace LWGUI
 		public PassSwitchDecorator(string lightModeName1, string lightModeName2, string lightModeName3, string lightModeName4, string lightModeName5, string lightModeName6)
 			: this(new[] { lightModeName1, lightModeName2, lightModeName3, lightModeName4, lightModeName5, lightModeName6 }) { }
 
-		public PassSwitchDecorator(string[] passNames) { _lightModeNames = passNames.Select((s => s.ToUpper())).ToArray(); }
+		public PassSwitchDecorator(string[] lightModeNames) { _lightModeNames = lightModeNames.Select((s => s.ToUpper())).ToArray(); }
 
 		#endregion
 
