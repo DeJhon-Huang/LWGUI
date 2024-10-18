@@ -693,7 +693,6 @@ namespace LWGUI.LwguiGradientEditor
             _curveEditor.curvesUpdated = () =>
             {
 	            _curveEditorContextMenuChanged = true;
-	            Debug.Log(111111111);
             };
             
             SyncCurveEditorRect();
