@@ -132,10 +132,11 @@ namespace LWGUI
 
 		private void DrawAdvancedHeader(PropertyStaticData propStaticData, MaterialProperty prop)
 		{
+			EditorGUILayout.Space(3);
 			var rect = EditorGUILayout.GetControlRect();
 			var revertButtonRect = RevertableHelper.SplitRevertButtonRect(ref rect);
 			var label = string.IsNullOrEmpty(propStaticData.advancedHeaderString) ? "Advanced" : propStaticData.advancedHeaderString;
-			propStaticData.isExpanding = EditorGUI.Foldout(rect, propStaticData.isExpanding, label);
+			propStaticData.isExpanding = EditorGUI.Foldout(rect, propStaticData.isExpanding, label, EditorStyles.foldoutHeader);
 			if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
 				propStaticData.isExpanding = !propStaticData.isExpanding;
 			RevertableHelper.DrawRevertableProperty(revertButtonRect, prop, metaDatas, true);
@@ -146,6 +147,9 @@ namespace LWGUI
 		{
 			var (propStaticData, propDynamicData) = metaDatas.GetPropDatas(prop);
 			var materialEditor = metaDatas.GetMaterialEditor();
+			
+			if (propStaticData.isAdvancedHeaderProperty)
+				EditorGUILayout.Space(3);
 
 			Helper.DrawHelpbox(propStaticData, propDynamicData);
 
