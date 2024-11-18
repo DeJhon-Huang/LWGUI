@@ -185,11 +185,33 @@ namespace LWGUI
 				MetaDataHelper.ReleaseMaterialMetadataCache(material);
 		}
 
-		// Called after editing the material
+		public static void OnValidate(Object[] materials)
+		{
+			UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(materials);
+			MetaDataHelper.ForceUpdateMaterialsMetadataCache(materials);
+		}
+		
+		// Called after edit in code
+		public static void OnValidate(LWGUIMetaDatas metaDatas)
+		{
+			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
+			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
+		}
+		
+		// Called after edit or undo
 		public override void ValidateMaterial(Material material)
 		{
 			base.ValidateMaterial(material);
-			metaDatas?.OnValidate();
+			// Undo
+			if (metaDatas == null)
+			{
+				OnValidate(new Object[] { material });
+			}
+			// Edit
+			else
+			{
+				OnValidate(metaDatas);
+			}
 		}
 	}
 } //namespace LWGUI

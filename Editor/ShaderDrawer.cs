@@ -1021,7 +1021,7 @@ namespace LWGUI
 				LwguiGradientWindow.CloseWindow();
 				prop.textureValue = newCreatedTexture;
 				OnCreateNewRampMap(prop.textureValue);
-				metaDatas.OnValidate();
+				LWGUI.OnValidate(metaDatas);
 			}
 
 			// Save gradient changes
@@ -1083,7 +1083,7 @@ namespace LWGUI
 				LwguiGradientWindow.CloseWindow();
 				prop.textureValue = newRampMap;
 				OnSwitchRampMap(prop.textureValue);
-				metaDatas.OnValidate();
+				LWGUI.OnValidate(metaDatas);
 			}
 		}
 	}

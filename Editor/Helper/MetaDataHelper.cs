@@ -49,12 +49,6 @@ namespace LWGUI
 		public Shader GetShader() => perShaderData.shader;
 
 		public MaterialEditor GetMaterialEditor() => perInspectorData.materialEditor;
-
-		public void OnValidate()
-		{
-			UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(GetMaterialEditor()?.targets);
-			MetaDataHelper.ForceUpdateMaterialsMetadataCache(GetMaterialEditor()?.targets);
-		}
 	}
 
 	public class MetaDataHelper
