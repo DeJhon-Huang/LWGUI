@@ -191,23 +191,23 @@ namespace LWGUI
 			MetaDataHelper.ForceUpdateMaterialsMetadataCache(materials);
 		}
 		
-		// Called after editing in code
+		// Called after edit in code
 		public static void OnValidate(LWGUIMetaDatas metaDatas)
 		{
 			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
 			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
 		}
 		
-		// Called after editing or undoing the material
+		// Called after edit or undo
 		public override void ValidateMaterial(Material material)
 		{
 			base.ValidateMaterial(material);
-			// Undoing
+			// Undo
 			if (metaDatas == null)
 			{
 				OnValidate(new Object[] { material });
 			}
-			// Editing
+			// Edit
 			else
 			{
 				OnValidate(metaDatas);
