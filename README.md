@@ -70,7 +70,8 @@ Having been validated through numerous large-scale commercial projects, employin
       * [Custom Header and Footer](#custom-header-and-footer)
       * [Custom Drawer](#custom-drawer)
    * [Contribution](#contribution)
-   <!--te-->
+
+<!--te-->
 
 
 ## Installation
