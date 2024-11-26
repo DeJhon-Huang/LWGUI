@@ -69,7 +69,7 @@
       * [Custom Header and Footer](#custom-header-and-footer)
       * [Custom Drawer](#custom-drawer)
    * [Contribution](#contribution)
-<!--te-->
+   <!--te-->
 
 
 ## Installation
@@ -443,6 +443,25 @@ Result:
 ![image-20240717104144821](./README_CN.assets/image-20240717104144821.png)![image-20240717104206365](./README_CN.assets/image-20240717104206365.png)
 
 可以使用LwguiGradientUsage() Attribute设置默认的显示设置.
+
+##### Gradient Editor
+
+新的LWGUI Gradient Editor集成了Unity内置的[Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html)和[Curve Editor](https://docs.unity3d.com/Manual/EditingCurves.html), 实现了比UE的Gradient Editor更加强大的功能. 
+
+![image-20241126110012922](./assets/image-20241126110012922.png)
+
+| 编辑器                | 解释                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| Time Range            | 横轴的显示范围, 可以选择0-1 / 0-24 / 0-2400, 当横轴为时间时非常有用. 注意, 只影响显示, 横轴实际存储的值始终为0-1. |
+| Channels              | 显示的通道, 可以单独只显示某些通道.                          |
+| sRGB Preview          | 当Gradient的值为颜色时应该勾选以预览正确的颜色, 否则不需要勾选. 只影响显示, Gradient和Ramp Map存储的值始终为Linear. |
+| Value / R / G / B / A | 用于编辑已选中的Key的Value, 可以同时编辑多个Key的Value.      |
+| Time                  | 用于编辑已选中的Key的Time, 可以同时编辑多个Key的Time. 如果手动输入数字, 必须要**按回车**以结束编辑. |
+| Gradient Editor       | 类似于Unity内置的[Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html), 但是将Alpha通道分离显示为黑白.<br/>注意, **从Gradient Editor添加Key时会受到最多8个Key的限制**, 从Curve Editor添加Key则数量**不受限制**. Key的数量超过限制不会影响预览和使用. |
+| Curve Editor          | 类似于Unity内置的Curve Editor, 默认显示XY 0-1的范围, 你可以用滚轮缩放或移动显示范围.<br/>如下图所示, 右键菜单中有大量控制曲线形态的功能, 你可以查阅[Unity文档](https://docs.unity3d.com/Manual/EditingCurves.html)以充分利用这些功能. |
+| Presets               | 你可以保存当前LWGUI Gradient为预设, 并随时调用这些预设. 这些预设在本地计算机的不同引擎版本之间通用, 但不会保存到项目中. |
+
+![image-20241126105823397](./assets/image-20241126105823397.png)![image-20241126112320151](./assets/image-20241126112320151.png)
 
 **已知问题:**
 

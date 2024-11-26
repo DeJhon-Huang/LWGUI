@@ -70,7 +70,7 @@ Having been validated through numerous large-scale commercial projects, employin
       * [Custom Header and Footer](#custom-header-and-footer)
       * [Custom Drawer](#custom-drawer)
    * [Contribution](#contribution)
-<!--te-->
+   <!--te-->
 
 
 ## Installation
@@ -444,6 +444,28 @@ Result:
 ![image-20240717104144821](./README_CN.assets/image-20240717104144821.png)![image-20240717104206365](./README_CN.assets/image-20240717104206365.png)
 
 Default display settings can be set using the LwguiGradientUsage() Attribute.
+
+
+##### Gradient Editor
+
+The new LWGUI Gradient Editor integrates with Unity's built-in [Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html) and [Curve Editor](https://docs.unity3d.com/Manual/EditingCurves.html), enabling more powerful features than UE's Gradient Editor.
+
+![image-20241126110012922](./assets/image-20241126110012922.png)
+
+| Editor                | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| Time Range            | The display range of the horizontal axis, selectable from 0-1 / 0-24 / 0-2400, is very useful when the horizontal axis is time. Note that only the display is affected, the actual value stored in the horizontal axis is always 0-1. |
+| Channels              | The channels displayed. Can be displayed individually.       |
+| sRGB Preview          | It should be checked when the value of Gradient is a color to preview the correct color, otherwise it doesn't need to be checked. Only affects the display, Gradient and Ramp Map are always stored as Linear. |
+| Value / R / G / B / A | Used to edit the Value of the selected Key, you can edit the Value of multiple Keys at the same time. |
+| Time                  | Used to edit the Time of the selected Key, you can edit the Time of multiple Keys at the same time. If you enter a number manually, you must **press enter** to end the editing. |
+| Gradient Editor       | This is similar to Unity's built-in [Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html), but the Alpha channels are separated into black and white. <br/>Note that **adding keys from the Gradient Editor is limited to a maximum of 8 keys**, adding keys from the Curve Editor is **unlimited**. Exceeding the key limit will not affect preview or usage. |
+| Curve Editor          | Similar to Unity's built-in Curve Editor, it displays the XY 0-1 range by default, and you can use the scroll wheel to zoom or move the display range.<br/>As you can see in the image below, the context menu has a number of functions for controlling the shape of the curve, and you can consult the [Unity documentation](https://docs.unity3d.com/Manual/EditingCurves.html) to get the most out of these functions. |
+| Presets               | You can save the current LWGUI Gradient as a preset and apply it anytime. These presets are common between different engine versions on the local computer, but are not saved to the project. |
+
+![image-20241126105823397](./assets/image-20241126105823397.png)![image-20241126112320151](./assets/image-20241126112320151.png)
+
+
 
 **Known issues:**
 
