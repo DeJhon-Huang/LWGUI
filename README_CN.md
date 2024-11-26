@@ -46,6 +46,7 @@
          * [Ramp](#ramp)
             * [ShaderLab](#shaderlab)
             * [C#](#c)
+            * [Gradient Editor](#gradient-editor)
          * [Preset](#preset)
             * [Create Preset File](#create-preset-file)
             * [Edit Preset](#edit-preset)
@@ -69,8 +70,6 @@
       * [Custom Header and Footer](#custom-header-and-footer)
       * [Custom Drawer](#custom-drawer)
    * [Contribution](#contribution)
-
-
 <!--te-->
 
 
