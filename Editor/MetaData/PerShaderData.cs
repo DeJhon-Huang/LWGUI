@@ -31,7 +31,7 @@ namespace LWGUI
 		public bool IsDefaultDisplayMode() { return !(showAllAdvancedProperties || showAllHiddenProperties || showOnlyModifiedProperties || showOnlyModifiedGroups); }
 	}
 
-	public class PropertyStaticData
+	public partial class PropertyStaticData
 	{
 		public string name        = string.Empty;
 		public string displayName = string.Empty; // Decoded displayName (Helpbox and Tooltip are encoded in displayName)
@@ -105,6 +105,7 @@ namespace LWGUI
 				propStaticDatas[prop.name] = propStaticData;
 
 				// Get Drawers and Build Drawer StaticMetaData
+				bool hasDecodedStaticMetaData = false;
 				{
 					var drawer = ReflectionHelper.GetPropertyDrawer(shader, prop, out var decoratorDrawers);
 
@@ -116,6 +117,7 @@ namespace LWGUI
 					{
 						propStaticData.baseDrawers = new List<IBaseDrawer>() { baseDrawer };
 						baseDrawer.BuildStaticMetaData(shader, prop, props, propStaticData);
+						hasDecodedStaticMetaData = true;
 					}
 
 					decoratorDrawers?.ForEach(decoratorDrawer =>
@@ -133,7 +135,8 @@ namespace LWGUI
 					});
 				}
 
-				DecodeMetaDataFromDisplayName(prop, propStaticData);
+				if (!hasDecodedStaticMetaData)
+					DecodeMetaDataFromDisplayName(prop, propStaticData);
 			}
 
 			// Check Data
@@ -245,7 +248,7 @@ namespace LWGUI
 
 		private static readonly string _helpboxSplitter = "%";
 
-		public void DecodeMetaDataFromDisplayName(MaterialProperty prop, PropertyStaticData propStaticData)
+		public static void DecodeMetaDataFromDisplayName(MaterialProperty prop, PropertyStaticData propStaticData)
 		{
 			var tooltips = prop.displayName.Split(new String[] { _tooltipSplitter }, StringSplitOptions.None);
 			if (tooltips.Length > 1)

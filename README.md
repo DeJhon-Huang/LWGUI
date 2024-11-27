@@ -343,10 +343,9 @@ Result:
 #### Image
 
 ```c#
-/// Draw a read only texture preview. Select the default texture to be displayed in the shader import settings.
-/// Note: Selected default textures will always be excluded from the build!!!
+/// Draw an image preview.
+/// display name: The path of the image file relative to the Unity project, such as: "Assets/test.png", "Doc/test.png", "../test.png"
 /// group：father group name, support suffix keyword for conditional display (Default: none)
-/// Target Property Type: Texture
 public ImageDrawer() { }
 public ImageDrawer(string group)
 ```
@@ -451,7 +450,7 @@ Default display settings can be set using the LwguiGradientUsage() Attribute.
 
 The new LWGUI Gradient Editor integrates with Unity's built-in [Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html) and [Curve Editor](https://docs.unity3d.com/Manual/EditingCurves.html), enabling more powerful features than UE's Gradient Editor.
 
-![image-20241126110012922](./assets/image-20241126110012922.png)
+![image-20241126110012922](./README_CN.assets/image-20241126110012922.png)
 
 | Editor                | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
@@ -464,7 +463,7 @@ The new LWGUI Gradient Editor integrates with Unity's built-in [Gradient Editor]
 | Curve Editor          | Similar to Unity's built-in Curve Editor, it displays the XY 0-1 range by default, and you can use the scroll wheel to zoom or move the display range.<br/>As you can see in the image below, the context menu has a number of functions for controlling the shape of the curve, and you can consult the [Unity documentation](https://docs.unity3d.com/Manual/EditingCurves.html) to get the most out of these functions. |
 | Presets               | You can save the current LWGUI Gradient as a preset and apply it anytime. These presets are common between different engine versions on the local computer, but are not saved to the project. |
 
-![image-20241126105823397](./assets/image-20241126105823397.png)![image-20241126112320151](./assets/image-20241126112320151.png)
+![image-20241126105823397](./README_CN.assets/image-20241126105823397.png)![image-20241126112320151](./README_CN.assets/image-20241126112320151.png)
 
 
 
@@ -525,6 +524,40 @@ The Property Value in the selected Preset will be the default value
 ![image-20221122232354623](README_CN.assets/image-20221122232354623.png)![image-20221122232415972](README_CN.assets/image-20221122232415972.png)![image-20221122232425194](README_CN.assets/image-20221122232425194.png)
 
 
+
+#### Button
+
+```c#
+/// Draw one or more Buttons within the same row, using the Display Name to control the appearance and behavior of the buttons
+/// 
+/// Declaring a set of Button Name and Button Command in Display Name generates a Button, separated by '@':
+/// ButtonName0@ButtonCommand0@ButtonName1@ButtonCommand1
+/// 
+/// Button Name can be any other string, the format of Button Command is:
+/// TYPE:Argument
+/// 
+/// The following TYPEs are currently supported:
+/// - URL: Open the URL, Argument is the URL
+/// - C#: Call the public static C# function, Argument is NameSpace.Class.Method(arg0, arg1, ...),
+///		for target function signatures, see: LWGUI.ButtonDrawer.TestMethod().
+///
+/// The full example:
+/// [Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+/// 
+/// group：father group name, support suffix keyword for conditional display (Default: none)
+public ButtonDrawer() { }
+public ButtonDrawer(string group)
+```
+
+Example:
+
+```c#
+[Title(Button Samples)]
+[Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C# Button@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+
+```
+
+![image-20241127180711449](./README_CN.assets/image-20241127180711449.png)
 
 
 

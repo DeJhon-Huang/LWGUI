@@ -342,10 +342,9 @@ Result:
 #### Image
 
 ```c#
-/// Draw a read only texture preview. Select the default texture to be displayed in the shader import settings.
-/// Note: Selected default textures will always be excluded from the build!!!
+/// Draw an image preview.
+/// display name: The path of the image file relative to the Unity project, such as: "Assets/test.png", "Doc/test.png", "../test.png"
 /// group：father group name, support suffix keyword for conditional display (Default: none)
-/// Target Property Type: Texture
 public ImageDrawer() { }
 public ImageDrawer(string group)
 ```
@@ -449,7 +448,7 @@ Result:
 
 新的LWGUI Gradient Editor集成了Unity内置的[Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html)和[Curve Editor](https://docs.unity3d.com/Manual/EditingCurves.html), 实现了比UE的Gradient Editor更加强大的功能. 
 
-![image-20241126110012922](./assets/image-20241126110012922.png)
+![image-20241126110012922](./README_CN.assets/image-20241126110012922.png)
 
 | 编辑器                | 解释                                                         |
 | --------------------- | ------------------------------------------------------------ |
@@ -462,7 +461,7 @@ Result:
 | Curve Editor          | 类似于Unity内置的Curve Editor, 默认显示XY 0-1的范围, 你可以用滚轮缩放或移动显示范围.<br/>如下图所示, 右键菜单中有大量控制曲线形态的功能, 你可以查阅[Unity文档](https://docs.unity3d.com/Manual/EditingCurves.html)以充分利用这些功能. |
 | Presets               | 你可以保存当前LWGUI Gradient为预设, 并随时调用这些预设. 这些预设在本地计算机的不同引擎版本之间通用, 但不会保存到项目中. |
 
-![image-20241126105823397](./assets/image-20241126105823397.png)![image-20241126112320151](./assets/image-20241126112320151.png)
+![image-20241126105823397](./README_CN.assets/image-20241126105823397.png)![image-20241126112320151](./README_CN.assets/image-20241126112320151.png)
 
 **已知问题:**
 
@@ -519,6 +518,40 @@ Result:
 ##### Edit Preset
 
 ![image-20221122232354623](README_CN.assets/image-20221122232354623.png)![image-20221122232415972](README_CN.assets/image-20221122232415972.png)![image-20221122232425194](README_CN.assets/image-20221122232425194.png)
+
+#### Button
+
+```c#
+/// Draw one or more Buttons within the same row, using the Display Name to control the appearance and behavior of the buttons
+/// 
+/// Declaring a set of Button Name and Button Command in Display Name generates a Button, separated by '@':
+/// ButtonName0@ButtonCommand0@ButtonName1@ButtonCommand1
+/// 
+/// Button Name can be any other string, the format of Button Command is:
+/// TYPE:Argument
+/// 
+/// The following TYPEs are currently supported:
+/// - URL: Open the URL, Argument is the URL
+/// - C#: Call the public static C# function, Argument is NameSpace.Class.Method(arg0, arg1, ...),
+///		for target function signatures, see: LWGUI.ButtonDrawer.TestMethod().
+///
+/// The full example:
+/// [Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+/// 
+/// group：father group name, support suffix keyword for conditional display (Default: none)
+public ButtonDrawer() { }
+public ButtonDrawer(string group)
+```
+
+Example:
+
+```c#
+[Title(Button Samples)]
+[Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C# Button@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+
+```
+
+![image-20241127180711449](./README_CN.assets/image-20241127180711449.png)
 
 
 
