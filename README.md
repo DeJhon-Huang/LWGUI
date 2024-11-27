@@ -51,6 +51,7 @@ Having been validated through numerous large-scale commercial projects, employin
          * [Preset](#preset)
             * [Create Preset File](#create-preset-file)
             * [Edit Preset](#edit-preset)
+         * [Button](#button)
       * [LWGUI Decorator](#lwgui-decorator)
          * [Title &amp; SubTitle](#title--subtitle)
          * [Tooltip &amp; Helpbox](#tooltip--helpbox)
