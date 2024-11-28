@@ -1237,6 +1237,8 @@ namespace LWGUI
 			this.group = group;
 		}
 
+		protected override float GetVisibleHeight(MaterialProperty prop) => 24;
+
 		public override void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData)
 		{
 			inoutPropertyStaticData.groupName = group;
