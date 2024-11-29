@@ -15,7 +15,8 @@ namespace LWGUI.CustomGUISample
 		[InitializeOnLoadMethod]
 		private static void RegisterEvent()
 		{
-			LWGUI.onDrawCustomHeader += DoCustomHeader;
+			// Register Event
+			// LWGUI.onDrawCustomHeader += DoCustomHeader;
 		}
 	}
 }

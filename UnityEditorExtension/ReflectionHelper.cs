@@ -51,9 +51,9 @@ namespace LWGUI
             editor.DefaultShaderPropertyInternal(position, prop, label);
         }
 
-        public static List<MeshRenderer> GetMeshRenderersByMaterialEditor(this MaterialEditor materialEditor)
+        public static List<Renderer> GetMeshRenderersByMaterialEditor(this MaterialEditor materialEditor)
         {
-            var outRenderers = new List<MeshRenderer>();
+            var outRenderers = new List<Renderer>();
 
             // MaterialEditor.ShouldEditorBeHidden()
             PropertyEditor property = materialEditor.propertyViewer as PropertyEditor;
@@ -63,6 +63,7 @@ namespace LWGUI
                 if (gameObject)
                 {
                     outRenderers.AddRange(gameObject.GetComponents<MeshRenderer>());
+                    outRenderers.AddRange(gameObject.GetComponents<SkinnedMeshRenderer>());
                 }
             }
 

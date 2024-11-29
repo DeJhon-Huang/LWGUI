@@ -629,7 +629,7 @@ namespace LWGUI
 			toolBarRect.xMin += 2;
 		}
 
-		public static Func<MeshRenderer, Material, Material> onFindMaterialAssetInRendererByMaterialInstance;
+		public static Func<Renderer, Material, Material> onFindMaterialAssetInRendererByMaterialInstance;
 		
 		private static bool FindMaterialAssetByMaterialInstance(Material material, LWGUIMetaDatas metaDatas, out Material materialAsset)
 		{
