@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Jason Ma
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using Object = UnityEngine.Object;
@@ -145,6 +146,8 @@ namespace LWGUI
 			public List<PropertyValue> propertyValues   = new List<PropertyValue>();
 			public List<string>        enabledKeywords  = new List<string>();
 			public List<string>        disabledKeywords = new List<string>();
+			public List<string>        enabledPasses  = new List<string>();
+			public List<string>        disabledPasses = new List<string>();
 			public int                 renderQueue      = -1;
 
 
@@ -156,11 +159,15 @@ namespace LWGUI
 					material.EnableKeyword(enabledKeyword);
 				foreach (var disabledKeyword in disabledKeywords)
 					material.DisableKeyword(disabledKeyword);
+				
+				Helper.SetShaderPassEnabled(new Object[] { material }, enabledPasses.Select(s => s.ToUpper()).ToArray(), true);
+				Helper.SetShaderPassEnabled(new Object[] { material }, disabledPasses.Select(s => s.ToUpper()).ToArray(), false);
+				
 				if (renderQueue >= 0)
 					material.renderQueue = renderQueue;
 			}
 
-			public void ApplyToEditingMaterial(UnityEngine.Object[] materials, PerMaterialData perMaterialData)
+			public void ApplyToEditingMaterial(Object[] materials, PerMaterialData perMaterialData)
 			{
 				for (int i = 0; i < materials.Length; i++)
 				{
@@ -171,12 +178,16 @@ namespace LWGUI
 						material.EnableKeyword(enabledKeyword);
 					foreach (var disabledKeyword in disabledKeywords)
 						material.DisableKeyword(disabledKeyword);
+
 					if (renderQueue >= 0)
 						material.renderQueue = renderQueue;
 				}
+				
+				Helper.SetShaderPassEnabled(materials, enabledPasses.Select(s => s.ToUpper()).ToArray(), true);
+				Helper.SetShaderPassEnabled(materials, disabledPasses.Select(s => s.ToUpper()).ToArray(), false);
 			}
 
-			public void ApplyKeywordsToMaterials(UnityEngine.Object[] materials)
+			public void ApplyKeywordsAndPassesToMaterials(Object[] materials)
 			{
 				for (int i = 0; i < materials.Length; i++)
 				{
@@ -186,6 +197,9 @@ namespace LWGUI
 					foreach (var disabledKeyword in disabledKeywords)
 						material.DisableKeyword(disabledKeyword);
 				}
+				
+				Helper.SetShaderPassEnabled(materials, enabledPasses.Select(s => s.ToUpper()).ToArray(), true);
+				Helper.SetShaderPassEnabled(materials, disabledPasses.Select(s => s.ToUpper()).ToArray(), false);
 			}
 
 			public PropertyValue GetPropertyValue(string propName)

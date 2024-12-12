@@ -45,6 +45,9 @@ namespace LWGUI
 
 		public static ShaderPropertyPreset GetPresetFile(string presetFileName)
 		{
+			if (string.IsNullOrEmpty(presetFileName))
+				return null;
+			
 			if (!_loadedPresets.ContainsKey(presetFileName) || !_loadedPresets[presetFileName])
 				ForceInit();
 

@@ -62,10 +62,15 @@ namespace LWGUI
 			// Get active presets
 			foreach (var prop in props)
 			{
-				var activePreset = perShaderData.propStaticDatas[prop.name].presetDrawer
-												?.GetActivePreset(prop, perShaderData.propStaticDatas[prop.name].propertyPresetAsset);
-				if (activePreset != null)
+				var propStaticData = perShaderData.propStaticDatas[prop.name];
+				var activePreset = propStaticData.presetDrawer?.GetActivePreset(prop, propStaticData.propertyPresetAsset);
+				if (activePreset != null
+				    // Filter invisible preset properties
+						&& (propStaticData.showIfDatas.Count == 0 
+						    || ShowIfDecorator.GetShowIfResultFromMaterial(propStaticData.showIfDatas, this.material)))
+				{
 					activePresetDatas.Add(new PersetDynamicData(activePreset, prop));
+				}
 			}
 
 			{
@@ -84,16 +89,6 @@ namespace LWGUI
 
 				var defaultProperties = MaterialEditor.GetMaterialProperties(new[] { defaultMaterial });
 				Debug.Assert(defaultProperties.Length == props.Length);
-
-				// Override default value
-				for (int i = 0; i < props.Length; i++)
-				{
-					Debug.Assert(props[i].name == defaultProperties[i].name);
-					Debug.Assert(!propDynamicDatas.ContainsKey(props[i].name));
-
-					perShaderData.propStaticDatas[props[i].name].baseDrawers
-								 ?.ForEach(baseDrawer => baseDrawer.OverrideDefaultValue(shader, props[i], defaultProperties[i], perShaderData));
-				}
 
 				// Init propDynamicDatas
 				for (int i = 0; i < props.Length; i++)
@@ -132,7 +127,7 @@ namespace LWGUI
 				}
 			}
 
-			// Store Show Modified Props Only Cache
+			// Store "Show Modified Props Only" Caches
 			{
 				if (perShaderData.displayModeData.showOnlyModifiedGroups || perShaderData.displayModeData.showOnlyModifiedProperties)
 				{

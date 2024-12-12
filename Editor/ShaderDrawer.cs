@@ -18,9 +18,6 @@ namespace LWGUI
 		void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData){}
 
 		void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerMaterialData inoutPerMaterialData){}
-
-		void OverrideDefaultValue(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData){}
-
 	}
 
 	public interface IBasePresetDrawer
@@ -41,22 +38,25 @@ namespace LWGUI
 
 	/// <summary>
 	/// Create a Folding Group
-	/// group：group name (Default: Property Name)
-	/// keyword：keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+	/// group: group name (Default: Property Name)
+	/// keyword: keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
 	/// default Folding State: "on" or "off" (Default: off)
 	/// default Toggle Displayed: "on" or "off" (Default: on)
+	/// preset File Name: "Shader Property Preset" asset name, see Preset() for detail (Default: none)
 	/// Target Property Type: FLoat, express Toggle value
 	/// </summary>
-	public class MainDrawer : MaterialPropertyDrawer, IBaseDrawer
+	public class MainDrawer : MaterialPropertyDrawer, IBaseDrawer, IBasePresetDrawer
 	{
 		protected LWGUIMetaDatas metaDatas;
 
+		private static readonly float  _height = 28f;
+		
 		private                 bool   _isFolding;
 		private                 string _group;
 		private                 string _keyword;
 		private                 bool   _defaultFoldingState;
 		private                 bool   _defaultToggleDisplayed;
-		private static readonly float  _height = 28f;
+		private                 string _presetFileName;
 
 		public MainDrawer() : this(String.Empty) { }
 
@@ -65,13 +65,16 @@ namespace LWGUI
 		public MainDrawer(string group, string keyword) : this(group, keyword, "off") { }
 
 		public MainDrawer(string group, string keyword, string defaultFoldingState) : this(group, keyword, defaultFoldingState, "on") { }
+		
+		public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed) : this(group, keyword, defaultFoldingState, defaultToggleDisplayed, String.Empty) { }
 
-		public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed)
+		public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed, string presetFileName)
 		{
 			this._group = group;
 			this._keyword = keyword;
 			this._defaultFoldingState = defaultFoldingState.ToLower() == "on";
 			this._defaultToggleDisplayed = defaultToggleDisplayed.ToLower() == "on";
+			this._presetFileName = presetFileName;
 		}
 
 		public virtual void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData)
@@ -80,12 +83,16 @@ namespace LWGUI
 			inoutPropertyStaticData.isMain = true;
 			inoutPropertyStaticData.isExpanding = _defaultFoldingState;
 			PerShaderData.DecodeMetaDataFromDisplayName(inProp, inoutPropertyStaticData);
+			PresetDrawer.SetPresetAssetToStaticData(inoutPropertyStaticData, _presetFileName);
 		}
 
 		public virtual void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerMaterialData inoutPerMaterialData)
 		{
 			inoutPerMaterialData.propDynamicDatas[inProp.name].defaultValueDescription = inDefaultProp.floatValue > 0 ? "On" : "Off";
 		}
+
+		public ShaderPropertyPreset.Preset GetActivePreset(MaterialProperty inProp, ShaderPropertyPreset shaderPropertyPreset) =>
+			PresetDrawer.GetActivePresetFromFloatProperty(inProp, shaderPropertyPreset);
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
@@ -101,6 +108,7 @@ namespace LWGUI
 			{
 				prop.floatValue = toggleResult ? 1.0f : 0.0f;
 				Helper.SetShaderKeyWord(editor.targets, Helper.GetKeyWord(_keyword, prop.name), toggleResult);
+				PresetHelper.GetPresetFile(_presetFileName)?.presets[(int)prop.floatValue].ApplyToEditingMaterial(prop.targets, metaDatas.perMaterialData);
 			}
 			EditorGUI.showMixedValue = showMixedValue;
 		}
@@ -115,17 +123,14 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!prop.hasMixedValue
-			 && (prop.type == MaterialProperty.PropType.Float
-			  || prop.type == MaterialProperty.PropType.Int
-				))
-				Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyword, prop.name), prop.floatValue > 0f);
+			Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyword, prop.name), prop.floatValue > 0f);
+			PresetDrawer.ApplyPreset(_presetFileName, prop);
 		}
 	}
 
 	/// <summary>
 	/// Draw a property with default style in the folding group
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// Target Property Type: Any
 	/// </summary>
 	public class SubDrawer : MaterialPropertyDrawer, IBaseDrawer
@@ -155,8 +160,6 @@ namespace LWGUI
 		}
 
 		public virtual void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerMaterialData inoutPerMaterialData) { }
-
-		public virtual void OverrideDefaultValue(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData) { }
 
 		public override void OnGUI(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
@@ -188,30 +191,44 @@ namespace LWGUI
 
 	/// <summary>
 	/// Similar to builtin Toggle()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
-	/// keyword：keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
+	/// keyword: keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+	/// preset File Name: "Shader Property Preset" asset name, see Preset() for detail (Default: none)
 	/// Target Property Type: FLoat
 	/// </summary>
-	public class SubToggleDrawer : SubDrawer
+	public class SubToggleDrawer : SubDrawer, IBasePresetDrawer
 	{
-		private string _keyWord = String.Empty;
+		private string _keyWord			= String.Empty;
+		private string _presetFileName	= String.Empty;
 
 		public SubToggleDrawer() { }
 
-		public SubToggleDrawer(string group) : this(group, String.Empty) { }
+		public SubToggleDrawer(string group) : this(group, String.Empty, String.Empty) { }
+		
+		public SubToggleDrawer(string group, string keyWord) : this(group, keyWord, String.Empty) { }
 
-		public SubToggleDrawer(string group, string keyWord)
+		public SubToggleDrawer(string group, string keyWord, string presetFileName)
 		{
 			this.group = group;
 			this._keyWord = keyWord;
+			this._presetFileName = presetFileName;
 		}
 
 		protected override bool IsMatchPropType(MaterialProperty property) { return property.type == MaterialProperty.PropType.Float; }
+
+		public override void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData)
+		{
+			base.BuildStaticMetaData(inShader, inProp, inProps, inoutPropertyStaticData);
+			PresetDrawer.SetPresetAssetToStaticData(inoutPropertyStaticData, _presetFileName);
+		}
 
 		public override void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerMaterialData inoutPerMaterialData)
 		{
 			inoutPerMaterialData.propDynamicDatas[inProp.name].defaultValueDescription = inDefaultProp.floatValue > 0 ? "On" : "Off";
 		}
+		
+		public ShaderPropertyPreset.Preset GetActivePreset(MaterialProperty inProp, ShaderPropertyPreset shaderPropertyPreset) =>
+			PresetDrawer.GetActivePresetFromFloatProperty(inProp, shaderPropertyPreset);
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
@@ -223,6 +240,7 @@ namespace LWGUI
 			{
 				prop.floatValue = value ? 1.0f : 0.0f;
 				Helper.SetShaderKeyWord(editor.targets, k, value);
+				PresetHelper.GetPresetFile(_presetFileName)?.presets[(int)prop.floatValue].ApplyToEditingMaterial(prop.targets, metaDatas.perMaterialData);
 			}
 			EditorGUI.showMixedValue = false;
 		}
@@ -230,14 +248,14 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!prop.hasMixedValue && IsMatchPropType(prop))
-				Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyWord, prop.name), prop.floatValue > 0f);
+			Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyWord, prop.name), prop.floatValue > 0f);
+			PresetDrawer.ApplyPreset(_presetFileName, prop);
 		}
 	}
 
 	/// <summary>
 	/// Similar to builtin PowerSlider()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// power: power of slider (Default: 1)
 	/// Target Property Type: Range
 	/// </summary>
@@ -267,7 +285,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Similar to builtin IntRange()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// Target Property Type: Range
 	/// </summary>
 	public class SubIntRangeDrawer : SubDrawer
@@ -306,7 +324,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Draw a min max slider
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// minPropName: Output Min Property Name
 	/// maxPropName: Output Max Property Name
 	/// Target Property Type: Range, range limits express the MinMaxSlider value range
@@ -418,7 +436,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Similar to builtin Enum() / KeywordEnum()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// n(s): display name
 	/// k(s): keyword
 	/// v(s): value
@@ -543,8 +561,7 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!prop.hasMixedValue && IsMatchPropType(prop))
-				Helper.SetShaderKeyWord(prop.targets, GetKeywords(prop), (int)prop.floatValue);
+			Helper.SetShaderKeyWord(prop.targets, GetKeywords(prop), (int)prop.floatValue);
 		}
 	}
 
@@ -626,7 +643,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Draw a Texture property in single line with a extra property
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// extraPropName: extra property name (Default: none)
 	/// Target Property Type: Texture
 	/// Extra Property Type: Color, Vector
@@ -708,7 +725,7 @@ namespace LWGUI
 	/// <summary>
 	/// Draw an image preview.
 	/// display name: The path of the image file relative to the Unity project, such as: "Assets/test.png", "Doc/test.png", "../test.png"
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// </summary>
 	public class ImageDrawer : SubDrawer
 	{
@@ -763,7 +780,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Display up to 4 colors in a single line
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// color2-4: extra color property name
 	/// Target Property Type: Color
 	/// </summary>
@@ -848,7 +865,7 @@ namespace LWGUI
 	/// 	RGB Average = (1f / 3f, 1f / 3f, 1f / 3f, 0)
 	/// 	RGB Luminance = (0.2126f, 0.7152f, 0.0722f, 0)
 	///		None = (0, 0, 0, 0)
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// Target Property Type: Vector, used to dot() with Texture Sample Value
 	/// </summary>
 	public class ChannelDrawer : SubDrawer
@@ -1118,7 +1135,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Popping a menu, you can select the Shader Property Preset, the Preset values will replaces the default values
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	///	presetFileName: "Shader Property Preset" asset name, you can create new Preset by
 	///		"Right Click > Create > LWGUI > Shader Property Preset" in Project window,
 	///		*any Preset in the entire project cannot have the same name*
@@ -1135,12 +1152,40 @@ namespace LWGUI
 			this.presetFileName = presetFileName;
 		}
 
+		public static void SetPresetAssetToStaticData(PropertyStaticData inoutPropertyStaticData, string presetFileName)
+		{
+			inoutPropertyStaticData.propertyPresetAsset = PresetHelper.GetPresetFile(presetFileName);
+		}
+
+		public static ShaderPropertyPreset.Preset GetActivePresetFromFloatProperty(MaterialProperty inProp, ShaderPropertyPreset shaderPropertyPreset)
+		{
+			ShaderPropertyPreset.Preset preset = null;
+			var index = (int)inProp.floatValue;
+			if (shaderPropertyPreset && index >= 0 && index < shaderPropertyPreset.presets.Count)
+			{
+				preset = shaderPropertyPreset.presets[index];
+			}
+			return preset;
+		}
+
+		public static void ApplyPreset(string presetFileName, MaterialProperty prop)
+		{
+			var presetFile = PresetHelper.GetPresetFile(presetFileName);
+			if (presetFile != null
+			    && prop.floatValue < presetFile.presets.Count
+			    && ShowIfDecorator.GetShowIfResultToFilterDrawerApplying(prop)
+			   )
+			{
+				presetFile.presets[(int)prop.floatValue].ApplyKeywordsAndPassesToMaterials(prop.targets);
+			}
+		}
+
 		protected override bool IsMatchPropType(MaterialProperty property) { return property.type == MaterialProperty.PropType.Float; }
 
 		public override void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData)
 		{
 			base.BuildStaticMetaData(inShader, inProp, inProps, inoutPropertyStaticData);
-			inoutPropertyStaticData.propertyPresetAsset = PresetHelper.GetPresetFile(presetFileName);
+			SetPresetAssetToStaticData(inoutPropertyStaticData, presetFileName);
 		}
 
 		public override void GetDefaultValueDescription(Shader inShader, MaterialProperty inProp, MaterialProperty inDefaultProp, PerShaderData inPerShaderData, PerMaterialData inoutPerMaterialData)
@@ -1152,16 +1197,8 @@ namespace LWGUI
 				inoutPerMaterialData.propDynamicDatas[inProp.name].defaultValueDescription = propertyPreset.presets[index].presetName;
 		}
 
-		public ShaderPropertyPreset.Preset GetActivePreset(MaterialProperty inProp, ShaderPropertyPreset shaderPropertyPreset)
-		{
-			ShaderPropertyPreset.Preset preset = null;
-			var index = (int)inProp.floatValue;
-			if (shaderPropertyPreset && index >= 0 && index < shaderPropertyPreset.presets.Count)
-			{
-				preset = shaderPropertyPreset.presets[index];
-			}
-			return preset;
-		}
+		public ShaderPropertyPreset.Preset GetActivePreset(MaterialProperty inProp, ShaderPropertyPreset shaderPropertyPreset) =>
+			GetActivePresetFromFloatProperty(inProp, shaderPropertyPreset);
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor)
 		{
@@ -1199,9 +1236,7 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			var presetFile = PresetHelper.GetPresetFile(presetFileName);
-			if (presetFile != null && prop.floatValue < presetFile.presets.Count)
-				presetFile.presets[(int)prop.floatValue].ApplyKeywordsToMaterials(prop.targets);
+			ApplyPreset(presetFileName, prop);
 		}
 	}
 	
@@ -1222,7 +1257,7 @@ namespace LWGUI
 	/// The full example:
 	/// [Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
 	/// 
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// </summary>
 	public class ButtonDrawer : SubDrawer
 	{
@@ -1370,7 +1405,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Similar to Header()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// header: string to display, "SpaceLine" or "_" = none (Default: none)
 	/// height: line height (Default: 22)
 	/// </summary>
@@ -1410,7 +1445,7 @@ namespace LWGUI
 
 	/// <summary>
 	/// Similar to Title()
-	/// group：father group name, support suffix keyword for conditional display (Default: none)
+	/// group: father group name, support suffix keyword for conditional display (Default: none)
 	/// header: string to display, "SpaceLine" or "_" = none (Default: none)
 	/// height: line height (Default: 22)
 	/// </summary>
@@ -1424,7 +1459,7 @@ namespace LWGUI
 	/// <summary>
 	/// Tooltip, describes the details of the property. (Default: property.name and property default value)
 	/// You can also use "#Text" in DisplayName to add Tooltip that supports Multi-Language.
-	/// tooltip：a single-line string to display, support up to 4 ','. (Default: Newline)
+	/// tooltip: a single-line string to display, support up to 4 ','. (Default: Newline)
 	/// </summary>
 	public class TooltipDecorator : SubDrawer
 	{
@@ -1461,7 +1496,7 @@ namespace LWGUI
 	/// <summary>
 	/// Display a Helpbox on the property
 	/// You can also use "%Text" in DisplayName to add Helpbox that supports Multi-Language.
-	/// message：a single-line string to display, support up to 4 ','. (Default: Newline)
+	/// message: a single-line string to display, support up to 4 ','. (Default: Newline)
 	/// </summary>
 	public class HelpboxDecorator : TooltipDecorator
 	{
@@ -1544,7 +1579,7 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (!prop.hasMixedValue && IsMatchPropType(prop))
+			if (ShowIfDecorator.GetShowIfResultToFilterDrawerApplying(prop))
 				Helper.SetShaderPassEnabled(prop.targets, _lightModeNames, prop.floatValue > 0);
 		}
 	}
@@ -1645,7 +1680,8 @@ namespace LWGUI
 			public float           value              = 0;
 		}
 
-		private ShowIfData _showIfData = new();
+		public ShowIfData showIfData = new();
+		
 		private readonly Dictionary<string, string> _compareFunctionLUT = new()
 		{
 			{ "Less", "Less" },
@@ -1669,65 +1705,104 @@ namespace LWGUI
 
 		public ShowIfDecorator(string logicalOperator, string propName, string compareFunction, float value)
 		{
-			_showIfData.logicalOperator = logicalOperator.ToLower() == "or" ? LogicalOperator.Or : LogicalOperator.And;
-			_showIfData.targetPropertyName = propName;
+			showIfData.logicalOperator = logicalOperator.ToLower() == "or" ? LogicalOperator.Or : LogicalOperator.And;
+			showIfData.targetPropertyName = propName;
 			if (!_compareFunctionLUT.ContainsKey(compareFunction) || !Enum.IsDefined(typeof(CompareFunction), _compareFunctionLUT[compareFunction]))
 				Debug.LogError("LWGUI: Invalid compareFunction: '"
 							 + compareFunction
 							 + "', Must be one of the following: Less (L) | Equal (E) | LessEqual (LEqual / LE) | Greater (G) | NotEqual (NEqual / NE) | GreaterEqual (GEqual / GE).");
 			else
-				_showIfData.compareFunction = (CompareFunction)Enum.Parse(typeof(CompareFunction), _compareFunctionLUT[compareFunction]);
-			_showIfData.value = value;
+				showIfData.compareFunction = (CompareFunction)Enum.Parse(typeof(CompareFunction), _compareFunctionLUT[compareFunction]);
+			showIfData.value = value;
+		}
+
+		private static void Compare(ShowIfData showIfData, float targetValue, ref bool result)
+		{
+			bool compareResult;
+
+			switch (showIfData.compareFunction)
+			{
+				case CompareFunction.Less:
+					compareResult = targetValue < showIfData.value;
+					break;
+				case CompareFunction.LessEqual:
+					compareResult = targetValue <= showIfData.value;
+					break;
+				case CompareFunction.Greater:
+					compareResult = targetValue > showIfData.value;
+					break;
+				case CompareFunction.NotEqual:
+					compareResult = targetValue != showIfData.value;
+					break;
+				case CompareFunction.GreaterEqual:
+					compareResult = targetValue >= showIfData.value;
+					break;
+				default:
+					compareResult = targetValue == showIfData.value;
+					break;
+			}
+
+			switch (showIfData.logicalOperator)
+			{
+				case LogicalOperator.And:
+					result &= compareResult;
+					break;
+				case LogicalOperator.Or:
+					result |= compareResult;
+					break;
+			}
+		}
+
+		public static bool GetShowIfResultToFilterDrawerApplying(MaterialProperty prop)
+		{
+			var material = prop.targets[0] as Material;
+			var showIfDatas = new List<ShowIfData>();
+			{
+				var drawer = ReflectionHelper.GetPropertyDrawer(material.shader, prop, out var decoratorDrawers);
+				if (decoratorDrawers != null && decoratorDrawers.Count > 0)
+				{
+					foreach (ShowIfDecorator showIfDecorator in decoratorDrawers.Where(drawer => drawer is ShowIfDecorator))
+					{
+						showIfDatas.Add(showIfDecorator.showIfData);
+					}
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			return GetShowIfResultFromMaterial(showIfDatas, material);
+		}
+		
+		public static bool GetShowIfResultFromMaterial(List<ShowIfData> showIfDatas, Material material)
+		{
+			bool result = true;
+			foreach (var showIfData in showIfDatas)
+			{
+				var targetValue = material.GetFloat(showIfData.targetPropertyName);
+				Compare(showIfData, targetValue, ref result);
+			}
+
+			return result;
+		}
+		
+		public static void GetShowIfResult(PropertyStaticData propStaticData, PropertyDynamicData propDynamicData, PerMaterialData perMaterialData)
+		{
+			foreach (var showIfData in propStaticData.showIfDatas)
+			{
+				var targetValue = perMaterialData.propDynamicDatas[showIfData.targetPropertyName].property.floatValue;
+				Compare(showIfData, targetValue, ref propDynamicData.isShowing);
+			}
 		}
 
 		protected override float GetVisibleHeight(MaterialProperty prop) { return 0; }
 
 		public override void BuildStaticMetaData(Shader inShader, MaterialProperty inProp, MaterialProperty[] inProps, PropertyStaticData inoutPropertyStaticData)
 		{
-			inoutPropertyStaticData.showIfDatas.Add(_showIfData);
+			inoutPropertyStaticData.showIfDatas.Add(showIfData);
 		}
 
 		public override void DrawProp(Rect position, MaterialProperty prop, GUIContent label, MaterialEditor editor) { }
-
-		public static void GetShowIfResult(PropertyStaticData propStaticData, PropertyDynamicData propDynamicData, PerMaterialData perMaterialData)
-		{
-			foreach (var showIfData in propStaticData.showIfDatas)
-			{
-				var propCurrentValue = perMaterialData.propDynamicDatas[showIfData.targetPropertyName].property.floatValue;
-				bool compareResult;
-
-				switch (showIfData.compareFunction)
-				{
-					case CompareFunction.Less:
-						compareResult = propCurrentValue < showIfData.value;
-						break;
-					case CompareFunction.LessEqual:
-						compareResult = propCurrentValue <= showIfData.value;
-						break;
-					case CompareFunction.Greater:
-						compareResult = propCurrentValue > showIfData.value;
-						break;
-					case CompareFunction.NotEqual:
-						compareResult = propCurrentValue != showIfData.value;
-						break;
-					case CompareFunction.GreaterEqual:
-						compareResult = propCurrentValue >= showIfData.value;
-						break;
-					default:
-						compareResult = propCurrentValue == showIfData.value;
-						break;
-				}
-
-				switch (showIfData.logicalOperator)
-				{
-					case LogicalOperator.And:
-						propDynamicData.isShowing &= compareResult;
-						break;
-					case LogicalOperator.Or:
-						propDynamicData.isShowing |= compareResult;
-						break;
-				}
-			}
-		}
 	}
 } //namespace LWGUI

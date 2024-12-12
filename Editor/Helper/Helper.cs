@@ -899,11 +899,16 @@ namespace LWGUI
 				menus.AddSeparator("");
 				foreach (var activePresetData in perMaterialData.activePresetDatas)
 				{
+					// Cull self
 					if (activePresetData.property == prop) continue;
 
 					var activePreset = activePresetData.preset;
-					var presetAsset = perShaderData.propStaticDatas[activePresetData.property.name].propertyPresetAsset;
-					var presetPropDisplayName = perShaderData.propStaticDatas[activePresetData.property.name].displayName;
+					var (presetPropStaticData, presetPropDynamicData) = metaDatas.GetPropDatas(activePresetData.property);
+					var presetAsset = presetPropStaticData.propertyPresetAsset;
+					var presetPropDisplayName = presetPropStaticData.displayName;
+					
+					// Cull invisible presets
+					if (!presetPropDynamicData.isShowing) continue;
 
 					if (activePreset.GetPropertyValue(prop.name) != null)
 					{

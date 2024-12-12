@@ -12,6 +12,7 @@
 		[Main(Group1, _KEYWORD, on)] _group1 ("Group - Default Open", float) = 1
 		[Preset(Group1, LWGUI_ShaderPropertyPreset)] _preset ("Preset Sample", float) = 0
 		[Preset(Group1, LWGUI_ShaderPropertyPreset1)] _preset1 ("Preset Sample 1", float) = 0
+		[SubToggle(Group1, _, LWGUI_Preset_Toggle)] _preset_toggle ("Preset Toggle Sample", float) = 0
 		[Sub(Group1)] _float1 ("Sub Float", float) = 0
 		[Sub(Group1)] _vector1 ("Sub Vector", vector) = (1, 1, 1, 1)
 		[Sub(Group1)] [HDR] _color1 ("Sub HDR Color", color) = (0.7, 0.7, 1, 1)
