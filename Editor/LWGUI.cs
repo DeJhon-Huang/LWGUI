@@ -195,7 +195,6 @@ namespace LWGUI
 		public static void OnValidate(LWGUIMetaDatas metaDatas)
 		{
 			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
-			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
 		}
 		
 		// Called after edit or undo

@@ -119,12 +119,15 @@ namespace LWGUI
 			return _height;
 		}
 
-		// Call when creating new material, used to set keywords
+		// Call when create/edit/undo materials, used to set keywords and presets
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyword, prop.name), prop.floatValue > 0f);
-			PresetDrawer.ApplyPreset(_presetFileName, prop);
+			if (!prop.hasMixedValue)
+			{
+				Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyword, prop.name), prop.floatValue > 0f);
+				PresetDrawer.ApplyPreset(_presetFileName, prop);
+			}
 		}
 	}
 
@@ -248,8 +251,11 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyWord, prop.name), prop.floatValue > 0f);
-			PresetDrawer.ApplyPreset(_presetFileName, prop);
+			if (!prop.hasMixedValue)
+			{
+				Helper.SetShaderKeyWord(prop.targets, Helper.GetKeyWord(_keyWord, prop.name), prop.floatValue > 0f);
+				PresetDrawer.ApplyPreset(_presetFileName, prop);
+			}
 		}
 	}
 
@@ -561,7 +567,10 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			Helper.SetShaderKeyWord(prop.targets, GetKeywords(prop), (int)prop.floatValue);
+			if (!prop.hasMixedValue)
+			{
+				Helper.SetShaderKeyWord(prop.targets, GetKeywords(prop), (int)prop.floatValue);
+			}
 		}
 	}
 
@@ -1236,7 +1245,10 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			ApplyPreset(presetFileName, prop);
+			if (!prop.hasMixedValue)
+			{
+				ApplyPreset(presetFileName, prop);
+			}
 		}
 	}
 	
@@ -1579,8 +1591,11 @@ namespace LWGUI
 		public override void Apply(MaterialProperty prop)
 		{
 			base.Apply(prop);
-			if (ShowIfDecorator.GetShowIfResultToFilterDrawerApplying(prop))
-				Helper.SetShaderPassEnabled(prop.targets, _lightModeNames, prop.floatValue > 0);
+			if (!prop.hasMixedValue)
+			{
+				if (ShowIfDecorator.GetShowIfResultToFilterDrawerApplying(prop))
+					Helper.SetShaderPassEnabled(prop.targets, _lightModeNames, prop.floatValue > 0);
+			}
 		}
 	}
 

@@ -18,6 +18,7 @@ namespace LWGUI
 			ApplyMaterialPropertyAndDecoratorDrawers(objs);
 		}
 
+		// Called after edit or undo
 		public static void ApplyMaterialPropertyAndDecoratorDrawers(Object[] targets)
 		{
 			if (!EditorMaterialUtility.disableApplyMaterialPropertyDrawers)
