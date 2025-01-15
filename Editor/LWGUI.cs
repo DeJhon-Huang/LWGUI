@@ -1,7 +1,4 @@
 ﻿// Copyright (c) Jason Ma
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,12 +9,7 @@ namespace LWGUI
 
 	public class LWGUI : ShaderGUI
 	{
-		public MaterialProperty[] props;
-		public MaterialEditor     materialEditor;
-		public Material           material;
-		public Shader             shader;
-		public PerShaderData      perShaderData;
-		public PerFrameData       perFrameData;
+		public LWGUIMetaDatas     metaDatas;
 
 		public static LWGUICustomGUIEvent onDrawCustomHeader;
 		public static LWGUICustomGUIEvent onDrawCustomFooter;
@@ -27,20 +19,22 @@ namespace LWGUI
 		/// </summary>
 		public LWGUI() { }
 
+		/// <summary>
+		/// Called every frame when the content is updated, such as the mouse moving in the material editor
+		/// </summary>
 		public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] props)
 		{
-			this.props = props;
-			this.materialEditor = materialEditor;
-			this.material = materialEditor.target as Material;
-			this.shader = this.material.shader;
-			this.perShaderData = MetaDataHelper.BuildPerShaderData(shader, props);
-			this.perFrameData = MetaDataHelper.BuildPerFrameData(shader, material, props);
+			//-----------------------------------------------------------------------------
+			// Init Datas
+			var material = materialEditor.target as Material;
+			var shader = material.shader;
+			this.metaDatas = MetaDataHelper.BuildMetaDatas(shader, material, materialEditor, this, props);
 
 
-			// Custom Header
+			//-----------------------------------------------------------------------------
+			// Header
 			if (onDrawCustomHeader != null)
 				onDrawCustomHeader(this);
-
 
 			// Toolbar
 			bool enabled = GUI.enabled;
@@ -48,16 +42,17 @@ namespace LWGUI
 			var toolBarRect = EditorGUILayout.GetControlRect();
 			toolBarRect.xMin = 2;
 
-			Helper.DrawToolbarButtons(ref toolBarRect, this);
+			Helper.DrawToolbarButtons(ref toolBarRect, metaDatas);
 
-			Helper.DrawSearchField(toolBarRect, this);
+			Helper.DrawSearchField(toolBarRect, metaDatas);
 
 			GUILayoutUtility.GetRect(0, 0); // Space(0)
 			GUI.enabled = enabled;
 			Helper.DrawSplitLine();
 
 
-			// Properties
+			//-----------------------------------------------------------------------------
+			// Draw Properties
 			{
 				// move fields left to make rect for Revert Button
 				materialEditor.SetDefaultGUIWidths();
@@ -66,17 +61,16 @@ namespace LWGUI
 				// start drawing properties
 				foreach (var prop in props)
 				{
-					var propStaticData = perShaderData.propertyDatas[prop.name];
-					var propDynamicData = perFrameData.propertyDatas[prop.name];
+					var (propStaticData, propDynamicData) = metaDatas.GetPropDatas(prop);
 
 					// Visibility
 					{
-						if (!MetaDataHelper.GetPropertyVisibility(prop, material, this))
+						if (!MetaDataHelper.GetPropertyVisibility(prop, material, metaDatas))
 							continue;
 
 						if (propStaticData.parent != null
-							&& (!MetaDataHelper.GetParentPropertyVisibility(propStaticData.parent, material, this)
-								|| !MetaDataHelper.GetParentPropertyVisibility(propStaticData.parent.parent, material, this)))
+							&& (!MetaDataHelper.GetParentPropertyVisibility(propStaticData.parent, material, metaDatas)
+								|| !MetaDataHelper.GetParentPropertyVisibility(propStaticData.parent.parent, material, metaDatas)))
 							continue;
 					}
 
@@ -114,27 +108,22 @@ namespace LWGUI
 			}
 
 
+			//-----------------------------------------------------------------------------
+			// Footer
 			EditorGUILayout.Space();
 			Helper.DrawSplitLine();
 			EditorGUILayout.Space();
 
-
 			// Render settings
-#if UNITY_2019_4_OR_NEWER
 			if (SupportedRenderingFeatures.active.editableMaterialRenderQueue)
-#endif
-			{
 				materialEditor.RenderQueueField();
-			}
 			materialEditor.EnableInstancingField();
 			materialEditor.LightmapEmissionProperty();
 			materialEditor.DoubleSidedGIField();
 
-
 			// Custom Footer
 			if (onDrawCustomFooter != null)
 				onDrawCustomFooter(this);
-
 
 			// LOGO
 			EditorGUILayout.Space();
@@ -143,37 +132,85 @@ namespace LWGUI
 
 		private void DrawAdvancedHeader(PropertyStaticData propStaticData, MaterialProperty prop)
 		{
+			EditorGUILayout.Space(3);
 			var rect = EditorGUILayout.GetControlRect();
 			var revertButtonRect = RevertableHelper.SplitRevertButtonRect(ref rect);
 			var label = string.IsNullOrEmpty(propStaticData.advancedHeaderString) ? "Advanced" : propStaticData.advancedHeaderString;
-			propStaticData.isExpanding = EditorGUI.Foldout(rect, propStaticData.isExpanding, label);
+			propStaticData.isExpanding = EditorGUI.Foldout(rect, propStaticData.isExpanding, label, EditorStyles.foldoutHeader);
 			if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && rect.Contains(Event.current.mousePosition))
 				propStaticData.isExpanding = !propStaticData.isExpanding;
-			RevertableHelper.DrawRevertableProperty(revertButtonRect, prop, this, true);
-			Helper.DoPropertyContextMenus(rect, prop, this);
+			RevertableHelper.DrawRevertableProperty(revertButtonRect, prop, metaDatas, true);
+			Helper.DoPropertyContextMenus(rect, prop, metaDatas);
 		}
 
 		private void DrawProperty(MaterialProperty prop)
 		{
-			var propStaticData = perShaderData.propertyDatas[prop.name];
-			var propDynamicData = perFrameData.propertyDatas[prop.name];
+			var (propStaticData, propDynamicData) = metaDatas.GetPropDatas(prop);
+			var materialEditor = metaDatas.GetMaterialEditor();
+			
+			if (propStaticData.isAdvancedHeaderProperty)
+				EditorGUILayout.Space(3);
 
 			Helper.DrawHelpbox(propStaticData, propDynamicData);
 
 			var label = new GUIContent(propStaticData.displayName, MetaDataHelper.GetPropertyTooltip(propStaticData, propDynamicData));
-			var height = materialEditor.GetPropertyHeight(prop, label.text);
+			var height = metaDatas.perInspectorData.materialEditor.GetPropertyHeight(prop, label.text);
 			var rect = EditorGUILayout.GetControlRect(true, height);
 
 			var revertButtonRect = RevertableHelper.SplitRevertButtonRect(ref rect);
 
-			Helper.BeginProperty(rect, prop, this);
-			Helper.DoPropertyContextMenus(rect, prop, this);
+			var enabled = GUI.enabled;
+			if (propStaticData.isReadOnly) GUI.enabled = false;
+			Helper.BeginProperty(rect, prop, metaDatas);
+			Helper.DoPropertyContextMenus(rect, prop, metaDatas);
 			RevertableHelper.FixGUIWidthMismatch(prop.type, materialEditor);
 			if (propStaticData.isAdvancedHeaderProperty)
 				propStaticData.isExpanding = EditorGUI.Foldout(rect, propStaticData.isExpanding, string.Empty);
-			RevertableHelper.DrawRevertableProperty(revertButtonRect, prop, this, propStaticData.isMain || propStaticData.isAdvancedHeaderProperty);
+			RevertableHelper.DrawRevertableProperty(revertButtonRect, prop, metaDatas, propStaticData.isMain || propStaticData.isAdvancedHeaderProperty);
 			materialEditor.ShaderProperty(rect, prop, label);
-			Helper.EndProperty(this, prop);
+			Helper.EndProperty(metaDatas, prop);
+			GUI.enabled = enabled;
+		}
+
+		public override void OnClosed(Material material)
+		{
+			base.OnClosed(material);
+			MetaDataHelper.ReleaseMaterialMetadataCache(material);
+		}
+
+		public override void AssignNewShaderToMaterial(Material material, Shader oldShader, Shader newShader)
+		{
+			base.AssignNewShaderToMaterial(material, oldShader, newShader);
+			if (newShader != oldShader)
+				MetaDataHelper.ReleaseMaterialMetadataCache(material);
+		}
+
+		public static void OnValidate(Object[] materials)
+		{
+			UnityEditorExtension.ApplyMaterialPropertyAndDecoratorDrawers(materials);
+			MetaDataHelper.ForceUpdateMaterialsMetadataCache(materials);
+		}
+		
+		// Called after edit in code
+		public static void OnValidate(LWGUIMetaDatas metaDatas)
+		{
+			OnValidate(metaDatas?.GetMaterialEditor()?.targets);
+		}
+		
+		// Called after edit or undo
+		public override void ValidateMaterial(Material material)
+		{
+			base.ValidateMaterial(material);
+			// Undo
+			if (metaDatas == null)
+			{
+				OnValidate(new Object[] { material });
+			}
+			// Edit
+			else
+			{
+				OnValidate(metaDatas);
+			}
 		}
 	}
 } //namespace LWGUI

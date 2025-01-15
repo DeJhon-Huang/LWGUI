@@ -1,9 +1,8 @@
 {
-    "name": "LWGUI",
+    "name": "Unity.InternalAPIEditorBridge.020",
     "rootNamespace": "",
     "references": [
-        "LWGUI.Runtime",
-        "Unity.InternalAPIEditorBridge.020"
+        "LWGUI.Runtime"
     ],
     "includePlatforms": [
         "Editor"

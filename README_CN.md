@@ -14,8 +14,10 @@
 
 
 
-| ![image-20220926025611208](./README_CN.assets/image-20220926025611208.png) | ![image-20230821205439889](./README_CN.assets/image-20230821205439889.png) |
+| ![image-20240716183800118](./README_CN.assets/image-20240716183800118.png) | ![image-20240716184045776](./README_CN.assets/image-20240716184045776.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| NEW: 比UE更加强大的Gradient编辑器, 同时支持Shader和C#        | NEW: 直接在ShaderGUI中插入图片, 无需跳转浏览器即可支持复杂文档的显示 |
+| ![image-20220926025611208](./README_CN.assets/image-20220926025611208.png) | ![image-20230821205439889](./README_CN.assets/image-20230821205439889.png) |
 | 搜索栏亦可筛选已修改的属性                                   | 右键以按类型粘贴属性值                                       |
 
 
@@ -25,49 +27,60 @@
 | [paypal.me/JasonMa0012](paypal.me/JasonMa0012)      | ![723ddce6-fb86-48ff-9683-a12cf6cff7a0](./README_CN.assets/723ddce6-fb86-48ff-9683-a12cf6cff7a0.jpg) |
 
 
-- [Installation](#installation)
-- [Usage](#usage)
-  * [Getting Started](#getting-started)
-  * [LWGUI Drawers](#lwgui-drawers)
-    + [Main & Sub](#main--sub)
-    + [SubToggle](#subtoggle)
-    + [SubPowerSlider](#subpowerslider)
-    + [SubIntRange](#subintrange)
-    + [MinMaxSlider](#minmaxslider)
-    + [KWEnum](#kwenum)
-    + [SubEnum & SubKeywordEnum](#subenum--subkeywordenum)
-    + [Tex & Color](#tex--color)
-    + [Channel](#channel)
-    + [Ramp](#ramp)
-    + [Preset](#preset)
-      - [Create Preset File](#create-preset-file)
-      - [Edit Preset](#edit-preset)
-  * [LWGUI Decorator](#lwgui-decorator)
-    + [Title & SubTitle](#title--subtitle)
-    + [Tooltip & Helpbox](#tooltip--helpbox)
-    + [PassSwitch](#passswitch)
-    + [Advanced & AdvancedHeaderProperty](#advanced--advancedheaderproperty)
-    + [Hidden](#hidden)
-    + [ShowIf](#showif)
-  * [Unity Builtin Drawers](#unity-builtin-drawers)
-    + [Space](#space)
-    + [Header](#header)
-    + [Enum](#enum)
-    + [IntRange](#intrange)
-    + [KeywordEnum](#keywordenum)
-    + [PowerSlider](#powerslider)
-    + [Toggle](#toggle)
-  * [Tips](#tips)
-- [Custom Shader GUI](#custom-shader-gui)
-  * [Custom Header and Footer](#custom-header-and-footer)
-  * [Custom Drawer](#custom-drawer)
-- [TODO](#todo)
-- [Contribution](#contribution)
+<!--ts-->
+* [LWGUI (Light Weight Shader GUI)](#lwgui-light-weight-shader-gui)
+   * [Installation](#installation)
+   * [Usage](#usage)
+      * [Getting Started](#getting-started)
+      * [LWGUI Drawers](#lwgui-drawers)
+         * [Main &amp; Sub](#main--sub)
+         * [SubToggle](#subtoggle)
+         * [SubPowerSlider](#subpowerslider)
+         * [SubIntRange](#subintrange)
+         * [MinMaxSlider](#minmaxslider)
+         * [KWEnum](#kwenum)
+         * [SubEnum &amp; SubKeywordEnum](#subenum--subkeywordenum)
+         * [Tex &amp; Color](#tex--color)
+         * [Image](#image)
+         * [Channel](#channel)
+         * [Ramp](#ramp)
+            * [ShaderLab](#shaderlab)
+            * [C#](#c)
+            * [Gradient Editor](#gradient-editor)
+         * [Preset](#preset)
+            * [Create Preset File](#create-preset-file)
+            * [Edit Preset](#edit-preset)
+         * [Button](#button)
+      * [LWGUI Decorator](#lwgui-decorator)
+         * [Title &amp; SubTitle](#title--subtitle)
+         * [Tooltip &amp; Helpbox](#tooltip--helpbox)
+         * [PassSwitch](#passswitch)
+         * [Advanced &amp; AdvancedHeaderProperty](#advanced--advancedheaderproperty)
+         * [Hidden](#hidden)
+         * [ReadOnly](#readonly)
+         * [ShowIf](#showif)
+      * [Unity Builtin Drawers](#unity-builtin-drawers)
+         * [Space](#space)
+         * [Header](#header)
+         * [Enum](#enum)
+         * [IntRange](#intrange)
+         * [KeywordEnum](#keywordenum)
+         * [PowerSlider](#powerslider)
+         * [Toggle](#toggle)
+   * [Custom Shader GUI](#custom-shader-gui)
+      * [Custom Header and Footer](#custom-header-and-footer)
+      * [Custom Drawer](#custom-drawer)
+   * [Contribution](#contribution)
+<!--te-->
 
 
 ## Installation
 
-1. 确保你的Unity版本兼容LWGUI: **Unity 2017.4+**
+1. 确保你的Unity版本兼容LWGUI
+   - LWGUI <1.17: **Unity 2017.4+**
+   - LWGUI >=1.17: **Unity 2021.3+**
+     - **推荐的最低版本: Unity 2022.2+, 更低版本虽然能使用但可能有BUG**
+   
 2. 打开已有工程
 3. （可能需要全局代理）`Window > Package Manager > Add > Add package from git URL` 输入`https://github.com/JasonMa0012/LWGUI.git`
 
@@ -93,22 +106,24 @@
 
 ```c#
 /// Create a Folding Group
-/// group：group name (Default: Property Name)
-/// keyword：keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+/// group: group name (Default: Property Name)
+/// keyword: keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
 /// default Folding State: "on" or "off" (Default: off)
 /// default Toggle Displayed: "on" or "off" (Default: on)
+/// preset File Name: "Shader Property Preset" asset name, see Preset() for detail (Default: none)
 /// Target Property Type: FLoat, express Toggle value
 public MainDrawer() : this(String.Empty) { }
 public MainDrawer(string group) : this(group, String.Empty) { }
 public MainDrawer(string group, string keyword) : this(group, keyword, "off") { }
 public MainDrawer(string group, string keyword, string defaultFoldingState) : this(group, keyword, defaultFoldingState, "on") { }
-public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed)
+public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed) : this(group, keyword, defaultFoldingState, defaultToggleDisplayed, String.Empty) { }
+public MainDrawer(string group, string keyword, string defaultFoldingState, string defaultToggleDisplayed, string presetFileName)
 
 ```
 
 ```c#
 /// Draw a property with default style in the folding group
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// Target Property Type: Any
 public SubDrawer() { }
 public SubDrawer(string group)
@@ -162,13 +177,14 @@ Then change values:
 
 ```c#
 /// Similar to builtin Toggle()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
-/// keyword：keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
+/// keyword: keyword used for toggle, "_" = ignore, none or "__" = Property Name +  "_ON", always Upper (Default: none)
+/// preset File Name: "Shader Property Preset" asset name, see Preset() for detail (Default: none)
 /// Target Property Type: FLoat
 public SubToggleDrawer() { }
-public SubToggleDrawer(string group) : this(group, String.Empty) { }
-public SubToggleDrawer(string group, string keyWord)
-
+public SubToggleDrawer(string group) : this(group, String.Empty, String.Empty) { }
+public SubToggleDrawer(string group, string keyWord) : this(group, keyWord, String.Empty) { }
+public SubToggleDrawer(string group, string keyWord, string presetFileName)
 ```
 
 
@@ -177,7 +193,7 @@ public SubToggleDrawer(string group, string keyWord)
 
 ```c#
 /// Similar to builtin PowerSlider()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// power: power of slider (Default: 1)
 /// Target Property Type: Range
 public SubPowerSliderDrawer(float power) : this("_", power) { }
@@ -189,7 +205,7 @@ public SubPowerSliderDrawer(string group, float power)
 
 ```c#
 /// Similar to builtin IntRange()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// Target Property Type: Range
 public SubIntRangeDrawer(string group)
 
@@ -201,7 +217,7 @@ public SubIntRangeDrawer(string group)
 
 ```c#
 /// Draw a min max slider 
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// minPropName: Output Min Property Name
 /// maxPropName: Output Max Property Name
 /// Target Property Type: Range, range limits express the MinMaxSlider value range
@@ -232,7 +248,7 @@ Result:
 ```c#
 /// <summary>
 /// Similar to builtin Enum() / KeywordEnum()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// n(s): display name
 /// k(s): keyword
 /// v(s): value
@@ -284,7 +300,7 @@ public SubKeywordEnumDrawer(string group, string kw1, string kw2, string kw3, st
 
 ```c#
 /// Draw a Texture property in single line with a extra property
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// extraPropName: extra property name  (Default: none)
 /// Target Property Type: Texture
 /// Extra Property Type: Color, Vector
@@ -296,7 +312,7 @@ public TexDrawer(string group, string extraPropName)
 
 ```c#
 /// Display up to 4 colors in a single line
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// color2-4: extra color property name 
 /// Target Property Type: Color
 public ColorDrawer(string group, string color2) : this(group, color2, String.Empty, String.Empty) { }
@@ -314,7 +330,7 @@ Example:
 [Tex(Group3, _textureChannelMask1)] _tex_channel ("Tex with Channel", 2D) = "white" { }
 [HideInInspector] _textureChannelMask1(" ", Vector) = (0,0,0,1)
 
-// Display up to 4 colors in a single line (Unity 2019.2+)
+// Display up to 4 colors in a single line
 [Color(Group3, _mColor1, _mColor2, _mColor3)]
 _mColor ("Multi Color", Color) = (1, 1, 1, 1)
 [HideInInspector] _mColor1 (" ", Color) = (1, 0, 0, 1)
@@ -327,6 +343,20 @@ Result:
 
 ![image-20220828003507825](README_CN.assets/image-20220828003507825.png)
 
+#### Image
+
+```c#
+/// Draw an image preview.
+/// display name: The path of the image file relative to the Unity project, such as: "Assets/test.png", "Doc/test.png", "../test.png"
+/// group: father group name, support suffix keyword for conditional display (Default: none)
+public ImageDrawer() { }
+public ImageDrawer(string group)
+```
+
+Result:
+
+![image-20240416142736663](./README_CN.assets/image-20240416142736663.png)
+
 #### Channel
 
 ```c#
@@ -338,7 +368,7 @@ Result:
 /// 	RGB Average = (1f / 3f, 1f / 3f, 1f / 3f, 0)
 /// 	RGB Luminance = (0.2126f, 0.7152f, 0.0722f, 0)
 ///		None = (0, 0, 0, 0)
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// Target Property Type: Vector, used to dot() with Texture Sample Value 
 public ChannelDrawer() { }
 public ChannelDrawer(string group)
@@ -361,39 +391,86 @@ float selectedChannelValue = dot(tex2D(_Tex, uv), _textureChannelMask);
 
 #### Ramp
 
+##### ShaderLab
+
 ```c#
-/// Draw a Ramp Map Editor (Defaulf Ramp Map Resolution: 512 * 2)
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// Draw an unreal style Ramp Map Editor (Default Ramp Map Resolution: 512 * 2)
+/// NEW: The new LwguiGradient type has both the Gradient and Curve editors, and can be used in C# scripts and runtime, and is intended to replace UnityEngine.Gradient
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// defaultFileName: default Ramp Map file name when create a new one (Default: RampMap)
 /// rootPath: the path where ramp is stored, replace '/' with '.' (for example: Assets.Art.Ramps). when selecting ramp, it will also be filtered according to the path (Default: Assets)
+/// colorSpace: switch sRGB / Linear in ramp texture import setting (Default: sRGB)
 /// defaultWidth: default Ramp Width (Default: 512)
+/// viewChannelMask: editable channels. (Default: RGBA)
+/// timeRange: the abscissa display range (1/24/2400), is used to optimize the editing experience when the abscissa is time of day. (Default: 1)
 /// Target Property Type: Texture2D
 public RampDrawer() : this(String.Empty) { }
 public RampDrawer(string group) : this(group, "RampMap") { }
 public RampDrawer(string group, string defaultFileName) : this(group, defaultFileName, DefaultRootPath, 512) { }
 public RampDrawer(string group, string defaultFileName, float defaultWidth) : this(group, defaultFileName, DefaultRootPath, defaultWidth) { }
-public RampDrawer(string group, string defaultFileName, string rootPath, float defaultWidth)
-
+public RampDrawer(string group, string defaultFileName, string rootPath, float defaultWidth) : this(group, defaultFileName, rootPath, "sRGB", defaultWidth) { }
+public RampDrawer(string group, string defaultFileName, string rootPath, string colorSpace, float defaultWidth) : this(group, defaultFileName, rootPath, colorSpace, defaultWidth, "RGBA") { }
+public RampDrawer(string group, string defaultFileName, string rootPath, string colorSpace, float defaultWidth, string viewChannelMask) : this(group, defaultFileName, rootPath, colorSpace, defaultWidth, viewChannelMask, 1) { }
+public RampDrawer(string group, string defaultFileName, string rootPath, string colorSpace, float defaultWidth, string viewChannelMask, float timeRange)
 ```
 
 Example:
 
 ```c#
 [Ramp(_, RampMap, Assets.Art, 512)] _Ramp ("Ramp Map", 2D) = "white" { }
-
 ```
 
 Result:
 
 ![image-20230625185730363](./README_CN.assets/image-20230625185730363.png)
 
-Ramp编辑器:
-
-![image-20220821234658509](README_CN.assets/image-20220821234658509.png)
-
 你**必须手动保存编辑结果**, 如果有未保存的修改, Save按钮将显示黄色.
 
 **在你移动或者复制RampMap的时候, 切记要连同.meta文件一起移动, 否则将无法再次编辑!**
+
+##### C#
+
+Example:
+
+```c#
+public class Test : MonoBehaviour
+{
+    public LwguiGradient lwguiGradientSrgb = new LwguiGradient();
+
+    [LwguiGradientUsage(ColorSpace.Linear, LwguiGradient.ChannelMask.RGB, LwguiGradient.GradientTimeRange.TwentyFourHundred)]
+    public LwguiGradient lwguiGradientLinear = new LwguiGradient();
+}
+```
+
+Result:
+
+![image-20240717104144821](./README_CN.assets/image-20240717104144821.png)![image-20240717104206365](./README_CN.assets/image-20240717104206365.png)
+
+可以使用LwguiGradientUsage() Attribute设置默认的显示设置.
+
+##### Gradient Editor
+
+新的LWGUI Gradient Editor集成了Unity内置的[Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html)和[Curve Editor](https://docs.unity3d.com/Manual/EditingCurves.html), 实现了比UE的Gradient Editor更加强大的功能. 
+
+![image-20241126110012922](./README_CN.assets/image-20241126110012922.png)
+
+| 编辑器                | 解释                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| Time Range            | 横轴的显示范围, 可以选择0-1 / 0-24 / 0-2400, 当横轴为时间时非常有用. 注意, 只影响显示, 横轴实际存储的值始终为0-1. |
+| Channels              | 显示的通道, 可以单独只显示某些通道.                          |
+| sRGB Preview          | 当Gradient的值为颜色时应该勾选以预览正确的颜色, 否则不需要勾选. 只影响显示, Gradient和Ramp Map存储的值始终为Linear. |
+| Value / R / G / B / A | 用于编辑已选中的Key的Value, 可以同时编辑多个Key的Value.      |
+| Time                  | 用于编辑已选中的Key的Time, 可以同时编辑多个Key的Time. 如果手动输入数字, 必须要**按回车**以结束编辑. |
+| Gradient Editor       | 类似于Unity内置的[Gradient Editor](https://docs.unity3d.com/Manual/EditingValueProperties.html), 但是将Alpha通道分离显示为黑白.<br/>注意, **从Gradient Editor添加Key时会受到最多8个Key的限制**, 从Curve Editor添加Key则数量**不受限制**. Key的数量超过限制不会影响预览和使用. |
+| Curve Editor          | 类似于Unity内置的Curve Editor, 默认显示XY 0-1的范围, 你可以用滚轮缩放或移动显示范围.<br/>如下图所示, 右键菜单中有大量控制曲线形态的功能, 你可以查阅[Unity文档](https://docs.unity3d.com/Manual/EditingCurves.html)以充分利用这些功能. |
+| Presets               | 你可以保存当前LWGUI Gradient为预设, 并随时调用这些预设. 这些预设在本地计算机的不同引擎版本之间通用, 但不会保存到项目中. |
+
+![image-20241126105823397](./README_CN.assets/image-20241126105823397.png)![image-20241126112320151](./README_CN.assets/image-20241126112320151.png)
+
+**已知问题:**
+
+- Unity 2022以下的预览图像在sRGB/Linear颜色空间之间没有区别
+- 在编辑器帧率较低时Ctrl + Z结果可能和预期稍有偏差
 
 
 
@@ -401,7 +478,7 @@ Ramp编辑器:
 
 ```c#
 /// Popping a menu, you can select the Shader Property Preset, the Preset values will replaces the default values
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 ///	presetFileName: "Shader Property Preset" asset name, you can create new Preset by
 ///		"Right Click > Create > LWGUI > Shader Property Preset" in Project window,
 ///		*any Preset in the entire project cannot have the same name*
@@ -446,6 +523,40 @@ Result:
 
 ![image-20221122232354623](README_CN.assets/image-20221122232354623.png)![image-20221122232415972](README_CN.assets/image-20221122232415972.png)![image-20221122232425194](README_CN.assets/image-20221122232425194.png)
 
+#### Button
+
+```c#
+/// Draw one or more Buttons within the same row, using the Display Name to control the appearance and behavior of the buttons
+/// 
+/// Declaring a set of Button Name and Button Command in Display Name generates a Button, separated by '@':
+/// ButtonName0@ButtonCommand0@ButtonName1@ButtonCommand1
+/// 
+/// Button Name can be any other string, the format of Button Command is:
+/// TYPE:Argument
+/// 
+/// The following TYPEs are currently supported:
+/// - URL: Open the URL, Argument is the URL
+/// - C#: Call the public static C# function, Argument is NameSpace.Class.Method(arg0, arg1, ...),
+///		for target function signatures, see: LWGUI.ButtonDrawer.TestMethod().
+///
+/// The full example:
+/// [Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+/// 
+/// group: father group name, support suffix keyword for conditional display (Default: none)
+public ButtonDrawer() { }
+public ButtonDrawer(string group)
+```
+
+Example:
+
+```c#
+[Title(Button Samples)]
+[Button(_)] _button0 ("URL Button@URL:https://github.com/JasonMa0012/LWGUI@C# Button@C#:LWGUI.ButtonDrawer.TestMethod(1234, abcd)", Float) = 0
+
+```
+
+![image-20241127180711449](./README_CN.assets/image-20241127180711449.png)
+
 
 
 ### LWGUI Decorator
@@ -454,7 +565,7 @@ Result:
 
 ```c#
 /// Similar to Header()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// header: string to display, "SpaceLine" or "_" = none (Default: none)
 /// height: line height (Default: 22)
 public TitleDecorator(string header) : this("_", header, DefaultHeight) {}
@@ -464,7 +575,7 @@ public TitleDecorator(string group, string header, float height)
 
 
 /// Similar to Title()
-/// group：father group name, support suffix keyword for conditional display (Default: none)
+/// group: father group name, support suffix keyword for conditional display (Default: none)
 /// header: string to display, "SpaceLine" or "_" = none (Default: none)
 /// height: line height (Default: 22)
 public SubTitleDecorator(string group,  string header) : base(group, header, DefaultHeight) {}
@@ -477,7 +588,7 @@ public SubTitleDecorator(string group, string header, float height) : base(group
 ```c#
 /// Tooltip, describes the details of the property. (Default: property.name and property default value)
 /// You can also use "#Text" in DisplayName to add Tooltip that supports Multi-Language.
-/// tooltip：a single-line string to display, support up to 4 ','. (Default: Newline)
+/// tooltip: a single-line string to display, support up to 4 ','. (Default: Newline)
 public TooltipDecorator() : this(string.Empty) {}
 public TooltipDecorator(string tooltip) { this._tooltip = tooltip; }
 public TooltipDecorator(string s1, string s2) : this(s1 + ", " + s2) { }
@@ -491,7 +602,7 @@ public TooltipDecorator(string s1, string s2, string s3, string s4, string s5) :
 ```c#
 /// Display a Helpbox on the property
 /// You can also use "%Text" in DisplayName to add Helpbox that supports Multi-Language.
-/// message：a single-line string to display, support up to 4 ','. (Default: Newline)
+/// message: a single-line string to display, support up to 4 ','. (Default: Newline)
 public HelpboxDecorator() : this(string.Empty) {}
 public HelpboxDecorator(string message) { this._message = message; }
 public HelpboxDecorator(string s1, string s2) : this(s1 + ", " + s2) { }
@@ -584,8 +695,19 @@ Tips:
 
 ```c#
 /// 类似于HideInInspector(), 区别在于Hidden()可以通过Display Mode按钮取消隐藏.
-public Hidden()
+public HiddenDecorator()
 ```
+
+
+
+#### ReadOnly
+
+```c#
+/// 将属性设为只读.
+public ReadOnlyDecorator()
+```
+
+
 
 #### ShowIf
 
@@ -700,25 +822,6 @@ Custom Header和Footer可以让你无需修改LWGUI插件的代码即可在Shade
 ### Custom Drawer
 
 TODO
-
-## TODO
-
-- [ ] 支持ShaderGraph or ASE
-- [x] **per material保存折叠组打开状态**
-- [x] 支持Unreal风格的Revertable GUI
-- [x] **支持HelpBox**
-- [ ] 支持改文字格式
-- [x] **支持Tooltip, 显示默认值和自定义内容**
-- [x] **支持右上角菜单全部展开或折叠**
-- [x] 支持Pass开关
-- [ ] 支持Curve
-- [x] **支持搜索框**
-- [x] **支持仅显示已修改项**
-- [x] 支持预设管理器
-- [x] 支持自适应枚举宽度
-- [x] 支持2017
-  - [x] 反射引擎私有函数
-  - [x] 复制属性菜单
 
 
 
